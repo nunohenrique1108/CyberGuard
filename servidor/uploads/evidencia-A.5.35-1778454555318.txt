@@ -1,5 +1,0 @@
-Relatório Automático CyberGuard
-ISO: A.5.35
-Controlo: Revisão independente da segurança da informação.
-Status: Conforme
-Validado por: Nuno Carvalho

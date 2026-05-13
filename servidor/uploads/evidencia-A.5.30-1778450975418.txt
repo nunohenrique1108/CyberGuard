@@ -1,5 +1,0 @@
-Relatório Automático CyberGuard
-ISO: A.5.30
-Controlo: Prontidão das TIC para a continuidade do negócio.
-Status: Conforme
-Validado por: Nuno Carvalho

@@ -1,5 +1,0 @@
-Relatório Automático CyberGuard
-ISO: A.5.18
-Controlo: Direitos de acesso.
-Status: Conforme
-Validado por: Nuno Carvalho
