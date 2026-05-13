@@ -299,7 +299,7 @@ app.post('/api/mitigar-risco', async (req, res) => {
 // 🚨 ROTA FINAL (MÁGICA)
 // ==========================================
 // Se o pedido não for uma API nem uma imagem, abre o site!
-app.get((req, res) => {
+app.use((req, res) => {
     res.sendFile(path.join(__dirname, 'site', 'index.html'));
 });
 
