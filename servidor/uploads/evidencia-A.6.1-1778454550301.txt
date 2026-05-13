@@ -1,0 +1,5 @@
+Relatório Automático CyberGuard
+ISO: A.6.1
+Controlo: Verificação de antecedentes (Screening).
+Status: Conforme
+Validado por: Nuno Carvalho

@@ -1,0 +1,84 @@
+<!-- No teu relatorio.html, garante que tens estas CDNs no <head> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+async function gerarRelatorioCompletoModalfa() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // 1. OBTER DADOS DO SERVIDOR
+    const resIA = await fetch(API_URL + '/api/relatorio-ia');
+    const dados = await resIA.json();
+    const resControles = await fetch(API_URL + '/api/controlos');
+    const todosControlos = await resControles.json();
+
+    // --- PÁGINA 1: CAPA E GRÁFICOS ---
+    // Cabeçalho azul escuro
+    doc.setFillColor(44, 62, 80);
+    doc.rect(0, 0, 210, 50, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.text("Relatório de Conformidade ISO 27001", 105, 30, { align: 'center' });
+    
+    // Gráfico de Rosca (Simulado)
+    doc.setTextColor(44, 62, 80);
+    doc.setFontSize(16);
+    doc.text(`Resultado Global: ${dados.score}%`, 105, 70, { align: 'center' });
+    
+    // Desenhar círculo de conformidade
+    doc.setLineWidth(10);
+    doc.setDrawColor(230, 230, 230); // Cinza
+    doc.arc(105, 100, 25, 0, Math.PI * 2);
+    doc.stroke();
+    doc.setDrawColor(46, 204, 113); // Verde
+    doc.arc(105, 100, 25, 0, (Math.PI * 2) * (dados.score / 100));
+    doc.stroke();
+
+    // Análise de Risco (Texto longo da IA)
+    doc.setFontSize(14);
+    doc.text("Análise de Risco Estratégica:", 15, 140);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    const resumoLongo = doc.splitTextToSize(dados.resumo, 180);
+    doc.text(resumoLongo, 15, 150);
+
+    // --- PÁGINA 2: TABELA DE PLANO DE AÇÃO ---
+    doc.addPage();
+    doc.setFontSize(16);
+    doc.text("Plano de Ação Corretiva (PAC)", 15, 20);
+    
+    doc.autoTable({
+        startY: 30,
+        head: [['ID ISO', 'Falha Detetada (Vulnerabilidade)', 'Ação Recomendada']],
+        body: dados.plano.map(p => [p.controlo, p.problema, p.solucao]),
+        theme: 'striped',
+        headStyles: { fillColor: [44, 62, 80] }
+    });
+
+    // --- PÁGINAS 3-6: LISTAGEM DETALHADA DE EVIDÊNCIAS ---
+    doc.addPage();
+    doc.setFontSize(16);
+    doc.text("Verificação Detetada por Controlo", 15, 20);
+
+    doc.autoTable({
+        startY: 30,
+        head: [['Controlo Avaliado', 'Resultado']],
+        body: todosControlos.map(c => [c.nome_controlo, c.estado]),
+        didParseCell: function(data) {
+            if (data.cell.text[0] === 'CONFORME') data.cell.styles.textColor = [39, 174, 96];
+            if (data.cell.text[0] === 'PENDENTE') data.cell.styles.textColor = [230, 126, 34];
+        }
+    });
+
+    // Rodapé em todas as páginas
+    const pageCount = doc.internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(9);
+        doc.text(`Relatório Auditoria ISO 27001 | Página ${i} de ${pageCount}`, 105, 285, { align: 'center' });
+    }
+
+    doc.save(`Relatorio_Final_ISO27001_${new Date().getTime()}.pdf`);
+}
+</script>

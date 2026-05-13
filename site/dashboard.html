@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>CyberGuard | Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        :root { 
+            --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; 
+            --success: #27ae60; --warning: #f39c12; --danger: #e74c3c; --light: #f8f9fa; 
+        }
+        
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: var(--light); display: flex; min-height: 100vh; }
+        
+        /* SIDEBAR */
+        .sidebar { width: 260px; background: var(--secondary); color: white; display: flex; flex-direction: column; position: fixed; height: 100vh; }
+        .sidebar-header { 
+            padding: 25px; 
+            font-size: 22px; 
+            font-weight: bold; 
+            border-bottom: 1px solid rgba(255,255,255,0.1); 
+            text-align: center; 
+        }
+        .sidebar-item { 
+            padding: 15px 25px; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            text-decoration: none; 
+            color: white; 
+            display: block; 
+            border-left: 4px solid transparent; 
+        }
+        .sidebar-item:hover { background: rgba(255,255,255,0.1); border-left-color: var(--accent); }
+        .active { background: rgba(255,255,255,0.2); border-left-color: var(--accent); }
+        
+        .logout-item { 
+            margin-top: auto; 
+            background: #3d465a; 
+            color: #e74c3c; 
+            border-left: 4px solid #e74c3c; 
+            padding: 15px 25px; 
+            text-decoration: none; 
+            display: block; 
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .logout-item:hover { background: rgba(255, 255, 255, 0.05); }
+
+        /* Content Area */
+        .main-content { flex: 1; margin-left: 260px; padding: 40px; }
+        
+        /* NOVO: Banner de Boas-Vindas Profissional */
+        .welcome-banner {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: white; 
+            padding: 25px 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            border-left: 5px solid var(--accent);
+        }
+        .welcome-text h2 { margin: 0; color: var(--primary); font-size: 24px; }
+        .welcome-text p { margin: 5px 0 0 0; color: #7f8c8d; font-size: 14px; }
+        .welcome-info { text-align: right; }
+        .welcome-date { font-weight: bold; color: var(--primary); font-size: 16px; margin-bottom: 5px; }
+        .status-dot { height: 10px; width: 10px; background-color: var(--success); border-radius: 50%; display: inline-block; margin-right: 5px; box-shadow: 0 0 8px var(--success); }
+
+        /* Cards e Gráficos */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; }
+        .number { font-size: 36px; font-weight: bold; color: var(--primary); margin-top: 10px; }
+        
+        .dashboard-row { display: grid; grid-template-columns: 1fr 1.5fr; gap: 25px; }
+        .chart-box, .table-box { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; color: #7f8c8d; font-size: 13px; padding: 12px; border-bottom: 2px solid #eee; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+        .badge { padding: 5px 10px; border-radius: 20px; color: white; font-size: 11px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">🛡️ CyberGuard</div>
+        <a href="dashboard.html" class="sidebar-item active">📊 Dashboard</a>
+        <a href="controlos.html" class="sidebar-item">📋 Auditoria Anexo A</a>
+        <a href="riscos.html" class="sidebar-item">🔥 Riscos Críticos</a>
+        <a href="evidencias.html" class="sidebar-item">📁 Evidências</a>
+        <a href="historico.html" class="sidebar-item">🕒 Histórico</a>
+        <a href="recursos.html" class="sidebar-item">📚 Recursos Educativos</a>
+        <a href="perfil.html" class="sidebar-item">👤 Perfil</a>
+        <a href="index.html" class="logout-item">🚪 Sair</a>
+    </aside>
+
+    <main class="main-content">
+        
+        <div class="welcome-banner">
+            <div class="welcome-text">
+                <h2>Olá, <span id="user-greeting">Auditor</span>! 👋</h2>
+                <p>Bem-vindo ao teu Painel Central de Conformidade e Gestão de Risco GRC.</p>
+            </div>
+            <div class="welcome-info">
+                <div class="welcome-date" id="current-date">A carregar data...</div>
+                <div style="color: #7f8c8d; font-size: 12px; display: flex; align-items: center; justify-content: flex-end;">
+                    <span class="status-dot"></span> SGSI Online e Seguro
+                </div>
+            </div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="card">
+                <h3 style="font-size: 12px; color: #7f8c8d; margin: 0;">TOTAL DE CONTROLOS</h3>
+                <div class="number" id="total-count">0</div>
+            </div>
+            <div class="card" style="border-bottom: 4px solid var(--success);">
+                <h3 style="font-size: 12px; color: #7f8c8d; margin: 0;">CONFORMES</h3>
+                <div class="number" id="conforme-count" style="color: var(--success);">0</div>
+            </div>
+            <div class="card" style="border-bottom: 4px solid var(--warning);">
+                <h3 style="font-size: 12px; color: #7f8c8d; margin: 0;">PENDENTES</h3>
+                <div class="number" id="pendente-count" style="color: var(--warning);">0</div>
+            </div>
+        </div>
+
+        <div class="dashboard-row">
+            <div class="chart-box">
+                <h3 style="margin-top: 0; font-size: 16px;">Maturidade por Domínio</h3>
+                <div style="height: 300px;"><canvas id="radarChart"></canvas></div>
+            </div>
+            <div class="chart-box">
+                <h3 style="margin-top: 0; font-size: 16px;">Estado Global</h3>
+                <div style="height: 300px;"><canvas id="complianceChart"></canvas></div>
+            </div>
+        </div>
+
+        <div class="table-box" style="margin-top:25px;">
+            <h3 style="margin-top: 0; font-size: 16px;">📋 Atividade Recente dos Controlos</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Controlo</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-atividades"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        async function carregarDashboard() {
+            // Personalização: Buscar o nome do utilizador
+            const user = JSON.parse(localStorage.getItem('usuario'));
+            if (user && user.nome) {
+                document.getElementById('user-greeting').innerText = user.nome;
+            } else {
+                document.getElementById('user-greeting').innerText = "Nuno Henrique"; // Backup de segurança
+            }
+
+            // Personalização: Colocar a data de hoje em formato bonito
+            const opcoesData = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dataFormatada = new Date().toLocaleDateString('pt-PT', opcoesData);
+            // Primeira letra maiúscula
+            document.getElementById('current-date').innerText = dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1);
+
+            try {
+                const respStats = await fetch(API_URL + '/api/stats');
+                const stats = await respStats.json();
+                const respControlos = await fetch(API_URL + '/api/controlos');
+                const docs = await respControlos.json();
+
+                document.getElementById('total-count').innerText = stats.total || 93;
+                document.getElementById('conforme-count').innerText = stats.conforme || 0;
+                document.getElementById('pendente-count').innerText = stats.pendente || 0;
+
+                // Radar Chart - Maturidade
+                new Chart(document.getElementById('radarChart'), {
+                    type: 'radar',
+                    data: {
+                        labels: ['Organizacional', 'Pessoas', 'Físico', 'Tecnológico'],
+                        datasets: [{
+                            label: 'Nível Atual',
+                            data: [85, 45, 90, 60], // Valores simulados para o gráfico ficar bonito
+                            backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                            borderColor: 'rgb(52, 152, 219)',
+                            pointBackgroundColor: 'rgb(52, 152, 219)',
+                        }]
+                    },
+                    options: { maintainAspectRatio: false }
+                });
+
+                // Doughnut Chart
+                new Chart(document.getElementById('complianceChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Conforme', 'Pendente'],
+                        datasets: [{
+                            data: [stats.conforme, stats.pendente],
+                            backgroundColor: ['#27ae60', '#f39c12'],
+                            cutout: '70%'
+                        }]
+                    },
+                    options: { maintainAspectRatio: false }
+                });
+
+                const tbody = document.getElementById('lista-atividades');
+                tbody.innerHTML = '';
+                docs.slice(0, 5).forEach(item => {
+                    const cor = item.estado === 'CONFORME' ? 'var(--success)' : 'var(--warning)';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${item.id_controlo}</strong></td>
+                            <td>${item.nome_controlo}</td>
+                            <td><span class="badge" style="background:${cor}">${item.estado}</span></td>
+                        </tr>`;
+                });
+            } catch (err) { console.error(err); }
+        }
+        
+        window.onload = carregarDashboard;
+    </script>
+</body>
+</html>

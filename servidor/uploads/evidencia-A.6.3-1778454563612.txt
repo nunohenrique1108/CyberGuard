@@ -1,0 +1,5 @@
+Relatório Automático CyberGuard
+ISO: A.6.3
+Controlo: Consciencialização, educação e treino em segurança da informação.
+Status: Conforme
+Validado por: Nuno Carvalho

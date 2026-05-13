@@ -1,0 +1,5 @@
+Relatório Automático CyberGuard
+ISO: A.6.5
+Controlo: Responsabilidades após rescisão ou alteração de emprego.
+Status: Conforme
+Validado por: Nuno Carvalho

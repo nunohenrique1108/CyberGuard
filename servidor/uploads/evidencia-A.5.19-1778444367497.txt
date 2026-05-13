@@ -1,0 +1,5 @@
+CYBERGUARD GRC - DOCUMENTO NORMATIVO
+CONTROLO: A.5.19
+ESTADO: VALIDADO
+
+Este documento serve como evidência de conformidade para Segurança da informação nas relações com fornecedores..

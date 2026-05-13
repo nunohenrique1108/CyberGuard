@@ -1,0 +1,5 @@
+Relatório Automático CyberGuard
+ISO: A.7.1
+Controlo: Perímetros de segurança física.
+Status: Conforme
+Validado por: Nuno Carvalho

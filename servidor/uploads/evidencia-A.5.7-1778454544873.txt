@@ -1,0 +1,5 @@
+Relatório Automático CyberGuard
+ISO: A.5.7
+Controlo: Inteligência sobre ameaças (Threat intelligence).
+Status: Conforme
+Validado por: Nuno Carvalho

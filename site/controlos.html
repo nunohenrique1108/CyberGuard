@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>CyberGuard | Auditoria e Validação</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        :root { --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --success: #27ae60; --warning: #f39c12; --danger: #e74c3c; --light: #f8f9fa; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: var(--light); display: flex; min-height: 100vh; }
+        
+        /* Sidebar Uniformizada */
+        .sidebar { width: 260px; background: var(--secondary); color: white; display: flex; flex-direction: column; position: fixed; height: 100vh; }
+        .sidebar-header { padding: 25px; font-size: 22px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; }
+        
+        .sidebar-item { padding: 15px 25px; cursor: pointer; transition: 0.3s; text-decoration: none; color: white; display: block; border-left: 4px solid transparent; }
+        .sidebar-item:hover { background: rgba(255,255,255,0.1); border-left-color: var(--accent); }
+        .active { background: rgba(255,255,255,0.2); border-left-color: var(--accent); }
+        
+        .logout-item { margin-top: auto; background: #3d465a; color: #e74c3c; border-left: 4px solid #e74c3c; padding: 15px 25px; text-decoration: none; display: block; font-weight: bold; transition: 0.3s; }
+        .logout-item:hover { background: rgba(255, 255, 255, 0.05); }
+
+        .main-content { flex: 1; margin-left: 260px; padding: 40px; }
+        
+        /* Banner de Alerta Crítico */
+        #alert-banner { display: none; background: #fee2e2; border: 2px solid var(--danger); color: #991b1b; padding: 15px; border-radius: 8px; margin-bottom: 25px; font-weight: bold; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
+        /* Cards de Resumo */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid var(--accent); }
+        .stat-card h3 { margin: 0; font-size: 14px; color: #7f8c8d; text-transform: uppercase; }
+        .stat-card p { margin: 10px 0 0; font-size: 28px; font-weight: bold; color: var(--primary); }
+
+        .table-container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 15px; color: #7f8c8d; border-bottom: 2px solid #eee; font-size: 13px; }
+        td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
+        
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; color: white; }
+        .risco-badge { font-weight: bold; font-size: 12px; }
+        .risco-CRÍTICO { color: var(--danger); }
+        .risco-MÉDIO { color: var(--warning); }
+        .risco-BAIXO { color: var(--success); }
+
+        .btn-dl { background: var(--success); color: white; text-decoration: none; padding: 8px 12px; border-radius: 5px; font-size: 12px; font-weight: bold; }
+        .btn-none { background: #eee; color: #aaa; padding: 8px 12px; border-radius: 5px; font-size: 12px; cursor: not-allowed; }
+        
+        .btn-validar { cursor: pointer; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; transition: 0.3s; margin-right: 5px; }
+        .btn-validar:hover { opacity: 0.8; }
+        
+        .btn-checklist { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-right: 5px; }
+        .btn-checklist:hover { background: var(--secondary); transform: scale(1.05); }
+
+        .btn-relatorio-ia { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+        .btn-relatorio-ia:hover { background: var(--accent); transform: translateY(-2px); }
+
+        /* VISÕES E MODAL */
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .company-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer; transition: 0.3s; text-align: center; width: 250px; border: 2px solid transparent; }
+        .company-card:hover { border-color: var(--accent); transform: translateY(-5px); }
+        .company-card h3 { color: var(--primary); margin-bottom: 10px; }
+
+        /* Estilos do Modal de Checklist */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+        .modal-content { background-color: white; padding: 30px; border-radius: 12px; width: 60%; max-width: 700px; box-shadow: 0 5px 30px rgba(0,0,0,0.3); position: relative; max-height: 90vh; overflow-y: auto; }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; font-weight: bold; cursor: pointer; color: #7f8c8d; }
+        .close-btn:hover { color: var(--danger); }
+        .pergunta-linha { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+        .pergunta-linha p { margin: 0 0 10px 0; font-weight: bold; color: var(--secondary); }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">🛡️ CyberGuard</div>
+        <a href="dashboard.html" class="sidebar-item">📊 Dashboard</a>
+        <a href="controlos.html" class="sidebar-item active">📋 Auditoria Anexo A</a>
+        <a href="riscos.html" class="sidebar-item">🔥 Riscos Críticos</a>
+        <a href="evidencias.html" class="sidebar-item">📁 Evidências</a>
+        <a href="historico.html" class="sidebar-item">🕒 Histórico</a>
+        <a href="recursos.html" class="sidebar-item">📚 Recursos Educativos</a>
+        <a href="perfil.html" class="sidebar-item">👤 Perfil</a>
+        <a href="index.html" class="logout-item">🚪 Sair</a>
+    </aside>
+
+    <main class="main-content">
+        <div id="view-selecao" class="view-section active">
+            <h2>🏢 Selecione a Auditoria / Empresa</h2>
+            <p style="color: #7f8c8d; margin-bottom: 30px;">Escolha qual o cliente ou auditoria que deseja gerir neste momento.</p>
+            
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div class="company-card" onclick="abrirAuditoria('CyberGuard GRC', 1)">
+                    <div style="font-size: 40px; margin-bottom: 10px;">🛡️</div>
+                    <h3>CyberGuard GRC</h3>
+                    <p style="color: #7f8c8d; font-size: 13px;">Auditoria Anual ISO 27001</p>
+                </div>
+
+                <div class="company-card" onclick="abrirAuditoria('TechCorp Solutions', 2)">
+                    <div style="font-size: 40px; margin-bottom: 10px;">💻</div>
+                    <h3>TechCorp Solutions</h3>
+                    <p style="color: #7f8c8d; font-size: 13px;">Avaliação de Risco Q3</p>
+                </div>
+
+                <div class="company-card" onclick="abrirAuditoria('Nexus Health Group', 3)">
+                    <div style="font-size: 40px; margin-bottom: 10px;">🏥</div>
+                    <h3>Nexus Health Group</h3>
+                    <p style="color: #7f8c8d; font-size: 13px;">Conformidade Legal & Saúde</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-controlos" class="view-section">
+            
+            <button onclick="voltarParaSelecao()" class="btn-validar" style="background: #95a5a6; color: white; margin-bottom: 20px;">⬅ Voltar às Auditorias</button>
+
+            <div id="alert-banner">
+                ⚠️ INTERVENÇÃO URGENTE: Existem <span id="crit-count">0</span> controlos de risco CRÍTICO que ainda estão NÃO CONFORMES.
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>📋 Gestão de Conformidade: <span id="nome-empresa-titulo" style="color: var(--accent);"></span></h2>
+                <button id="btn-global-ia" class="btn-relatorio-ia" onclick="gerarRelatorioProfissional()">✨ Gerar Relatório Global IA</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total de Controlos</h3>
+                    <p id="total-ctrl">0</p>
+                </div>
+                <div class="stat-card" style="border-bottom-color: var(--danger);">
+                    <h3>Evidências em Falta</h3>
+                    <p id="total-evid" style="color: var(--danger);">0</p>
+                </div>
+                <div class="stat-card" style="border-bottom-color: var(--success);">
+                    <h3>Nível de Conformidade</h3>
+                    <p id="conf-rate">0%</p>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="tabela-controlos">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Controlo</th>
+                            <th>Nível de Risco</th>
+                            <th>Estado</th>
+                            <th>Evidência</th>
+                            <th>Ação Auditor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div id="modal-checklist" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="fecharModal()">&times;</span>
+            <h2 id="modal-titulo" style="color: var(--primary); margin-top: 0;">Avaliação do Controlo</h2>
+            <p id="modal-subtitulo" style="color: #7f8c8d; margin-bottom: 20px;"></p>
+
+            <form id="form-checklist">
+                <div class="pergunta-linha">
+                    <p>1. Existe uma Política de Segurança documentada e formalmente aprovada?</p>
+                    <label style="margin-right: 15px;"><input type="radio" name="p1" value="sim" required> Sim</label>
+                    <label><input type="radio" name="p1" value="nao"> Não</label>
+                </div>
+                <div class="pergunta-linha">
+                    <p>2. O controlo encontra-se implementado e os utilizadores foram consciencializados?</p>
+                    <label style="margin-right: 15px;"><input type="radio" name="p2" value="sim" required> Sim</label>
+                    <label><input type="radio" name="p2" value="nao"> Não</label>
+                </div>
+                <div class="pergunta-linha">
+                    <p>3. Existe evidência técnica (ex: logs, relatórios, contratos) válida submetida no sistema?</p>
+                    <label style="margin-right: 15px;"><input type="radio" name="p3" value="sim" required> Sim</label>
+                    <label><input type="radio" name="p3" value="nao"> Não</label>
+                </div>
+                <div class="pergunta-linha">
+                    <p>4. O controlo foi revisto internamente nos últimos 12 meses?</p>
+                    <label style="margin-right: 15px;"><input type="radio" name="p4" value="sim" required> Sim</label>
+                    <label><input type="radio" name="p4" value="nao"> Não</label>
+                </div>
+                <div class="pergunta-linha">
+                    <p>5. O controlo é monitorizado ativamente contra ameaças ou vulnerabilidades recentes?</p>
+                    <label style="margin-right: 15px;"><input type="radio" name="p5" value="sim" required> Sim</label>
+                    <label><input type="radio" name="p5" value="nao"> Não</label>
+                </div>
+            </form>
+
+            <div style="text-align: right; margin-top: 20px;">
+                <button type="button" class="btn-validar" style="background: #95a5a6; color: white;" onclick="fecharModal()">Cancelar</button>
+                <button type="button" class="btn-validar" style="background: var(--accent); color: white;" onclick="salvarModal()">Salvar Avaliação</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const user = JSON.parse(localStorage.getItem('usuario')) || { nome: "Nuno Carvalho" };
+        let controloAtualEmEdicao = null; 
+
+        // LÓGICA DAS VIEWS
+        function abrirAuditoria(nomeEmpresa, idEmpresa) {
+            document.getElementById('nome-empresa-titulo').innerText = nomeEmpresa;
+            document.getElementById('view-selecao').classList.remove('active');
+            document.getElementById('view-controlos').classList.add('active');
+            carregar();
+        }
+
+        function voltarParaSelecao() {
+            document.getElementById('view-controlos').classList.remove('active');
+            document.getElementById('view-selecao').classList.add('active');
+        }
+
+        // LÓGICA DO MODAL DE CHECKLIST
+        function abrirModal(idControlo, nomeControlo) {
+            controloAtualEmEdicao = idControlo;
+            document.getElementById('modal-titulo').innerText = `Controlo ${idControlo}`;
+            document.getElementById('modal-subtitulo').innerText = nomeControlo;
+            document.getElementById('form-checklist').reset();
+            document.getElementById('modal-checklist').style.display = 'flex';
+        }
+
+        function fecharModal() {
+            document.getElementById('modal-checklist').style.display = 'none';
+        }
+
+        async function salvarModal() {
+            const p1 = document.querySelector('input[name="p1"]:checked');
+            const p2 = document.querySelector('input[name="p2"]:checked');
+            const p3 = document.querySelector('input[name="p3"]:checked');
+            const p4 = document.querySelector('input[name="p4"]:checked');
+            const p5 = document.querySelector('input[name="p5"]:checked');
+
+            if (!p1 || !p2 || !p3 || !p4 || !p5) {
+                alert("Para garantir o rigor da ISO 27001, por favor responda a todas as 5 perguntas.");
+                return;
+            }
+
+            // MÁGICA: Tem de responder "Sim" a tudo para estar Conforme (1).
+            const valorFinal = (p1.value === 'sim' && p2.value === 'sim' && p3.value === 'sim' && p4.value === 'sim' && p5.value === 'sim') ? 1 : 0;
+
+            try {
+                await fetch(API_URL + '/api/atualizar-checklist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_controlo: controloAtualEmEdicao, conforme: valorFinal })
+                });
+
+                if(valorFinal === 1) {
+                    alert(`✅ Excelência! O Controlo ${controloAtualEmEdicao} cumpre todos os 5 requisitos da norma.`);
+                } else {
+                    alert(`⚠️ Atenção: O Controlo ${controloAtualEmEdicao} não cumpre todos os requisitos e ficará assinalado como Não Conforme.`);
+                }
+
+                fecharModal();
+                await carregar(); 
+
+            } catch (err) {
+                console.error("Erro ao salvar checklist:", err);
+                alert("Ocorreu um erro ao comunicar com o servidor.");
+            }
+        }
+
+        // CARREGAR DADOS NA TABELA
+        async function carregar() {
+            try {
+                const [respC, respE] = await Promise.all([
+                    fetch(API_URL + '/api/controlos'),
+                    fetch(API_URL + '/api/evidencias')
+                ]);
+                const controlos = await respC.json();
+                const evidencias = await respE.json();
+                
+                let criticosPendentes = 0;
+                let conformes = 0;
+                let evidenciasEmFalta = 0; 
+
+                const tbody = document.getElementById('corpo');
+                tbody.innerHTML = '';
+
+                controlos.forEach(c => {
+                    const nivelRisco = c.risco || 'BAIXO';
+                    const corEstado = c.estado === 'CONFORME' ? 'var(--success)' : 'var(--danger)';
+                    const evid = evidencias.find(e => e.id_controlo === c.id_controlo);
+                    
+                    if (c.estado === 'CONFORME') conformes++;
+                    
+                    // LÓGICA DE EVIDÊNCIAS EM FALTA: Conta apenas se NÃO tem ficheiro E se o estado ainda NÃO está aprovado (Conforme)
+                    if (!evid && c.estado !== 'CONFORME') evidenciasEmFalta++;
+                    
+                    if (nivelRisco === 'CRÍTICO' && c.estado !== 'CONFORME') criticosPendentes++;
+
+                    let linkDl = evid 
+                        ? `<a href="visualizar.html?file=http://localhost:5000/${evid.caminho.replace(/\\/g, '/')}" class="btn-dl" target="_blank">👁️ Ver Documento</a>`
+                        : `<span class="btn-none">Falta Evidência</span>`;
+
+                    let btnCheck = `<button class="btn-checklist" onclick="abrirModal('${c.id_controlo}', '${c.nome_controlo}')">📝 Avaliar</button>`;
+
+                    let acaoBtn = c.estado !== 'CONFORME'
+                        ? `${btnCheck} <button class="btn-validar" style="background:var(--success); color:white;" onclick="validar('${c.id_controlo}', 'CONFORME')">✅ Aprovar</button>`
+                        : `${btnCheck} <button class="btn-validar" style="background:var(--danger); color:white;" onclick="validar('${c.id_controlo}', 'PENDENTE')">❌ Reabrir</button>`;
+
+                    // DESTAQUE DA LINHA SE FALTAR EVIDÊNCIA (Mas a linha vermelha desaparece caso já esteja APROVADO)
+                    let linhaStyle = (!evid && c.estado !== 'CONFORME') ? 'border-left: 4px solid var(--danger); background-color: #fffafb;' : '';
+
+                    tbody.innerHTML += `
+                        <tr style="${linhaStyle}">
+                            <td><strong>${c.id_controlo}</strong></td>
+                            <td>${c.nome_controlo}</td>
+                            <td><span class="risco-badge risco-${nivelRisco}">⚠️ ${nivelRisco}</span></td>
+                            <td><span class="status-badge" style="background:${corEstado}">${c.estado}</span></td>
+                            <td>${linkDl}</td>
+                            <td><div style="display:flex;">${acaoBtn}</div></td>
+                        </tr>`;
+                });
+
+                document.getElementById('total-ctrl').innerText = controlos.length;
+                document.getElementById('total-evid').innerText = evidenciasEmFalta; 
+                
+                const percentagem = Math.round((conformes / controlos.length) * 100) || 0;
+                document.getElementById('conf-rate').innerText = percentagem + "%";
+
+                if (criticosPendentes > 0) {
+                    document.getElementById('alert-banner').style.display = 'block';
+                    document.getElementById('crit-count').innerText = criticosPendentes;
+                } else {
+                    document.getElementById('alert-banner').style.display = 'none';
+                }
+
+            } catch (err) {
+                console.error("Erro ao carregar dados:", err);
+            }
+        }
+
+        async function validar(id, novoEstado) {
+            try {
+                const resp = await fetch(API_URL + '/api/update-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id, novo_estado: novoEstado, auditor: user.nome })
+                });
+                if((await resp.json()).success) {
+                    await carregar(); 
+                }
+            } catch (err) {
+                console.error("Erro ao validar:", err);
+            }
+        }
+
+        // PDF RELATÓRIO IA GLOBAL
+        async function gerarRelatorioProfissional() {
+            const btn = document.getElementById('btn-global-ia');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "⏳ A gerar Relatório de 6 páginas...";
+            btn.disabled = true;
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                const [resIA, resCtrl] = await Promise.all([
+                    fetch(API_URL + '/api/relatorio-ia'),
+                    fetch(API_URL + '/api/controlos')
+                ]);
+                
+                if (!resIA.ok) throw new Error("Erro na resposta do servidor");
+                
+                const dadosIA = await resIA.json();
+                const todosControlos = await resCtrl.json();
+
+                doc.setFillColor(44, 62, 80); 
+                doc.rect(0, 0, 210, 40, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(22);
+                doc.text("CyberGuard | Relatório de Conformidade ISO 27001", 105, 25, { align: 'center' });
+
+                doc.setTextColor(44, 62, 80);
+                doc.setFontSize(16);
+                doc.text(`Score Global de Conformidade: ${dadosIA.score}%`, 105, 60, { align: 'center' });
+                
+                doc.setLineWidth(10);
+                doc.setDrawColor(230, 230, 230);
+                doc.circle(105, 95, 20, 'S'); 
+                
+                doc.setDrawColor(46, 204, 113);
+                if(dadosIA.score > 0) { doc.circle(105, 95, 20, 'S'); }
+
+                doc.setFontSize(14);
+                doc.text("Análise de Risco Estratégica:", 15, 140);
+                doc.setFontSize(11);
+                doc.setFont("helvetica", "normal");
+                const resumoTexto = doc.splitTextToSize(dadosIA.resumo || "Análise indisponível.", 180);
+                doc.text(resumoTexto, 15, 150);
+
+                doc.addPage();
+                doc.setFontSize(16);
+                doc.text("Plano de Ação Corretiva (PAC)", 15, 20);
+                doc.autoTable({
+                    startY: 30,
+                    head: [['ISO', 'Falha Detetada', 'Solução Recomendada']],
+                    body: dadosIA.plano.map(p => [p.controlo, p.problema, p.solucao]),
+                    theme: 'striped',
+                    headStyles: { fillColor: [44, 62, 80] }
+                });
+
+                doc.addPage();
+                doc.text("Detalhes Completos da Avaliação", 15, 20);
+                doc.autoTable({
+                    startY: 30,
+                    head: [['Controlo', 'Resultado']],
+                    body: todosControlos.map(c => [c.nome_controlo, c.estado]),
+                    didParseCell: function(data) {
+                        if (data.cell.text[0] === 'CONFORME') data.cell.styles.textColor = [39, 174, 96];
+                        else data.cell.styles.textColor = [192, 57, 43];
+                    }
+                });
+
+                const totalPages = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= totalPages; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(9);
+                    doc.text(`Página ${i} de ${totalPages} | CyberGuard GRC`, 105, 285, { align: 'center' });
+                }
+
+                doc.save(`Relatorio_ISO27001_Final.pdf`);
+                alert("✅ Relatório gerado com sucesso!");
+
+            } catch (err) {
+                console.error("Erro detalhado:", err);
+                alert("Erro ao gerar PDF: " + err.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

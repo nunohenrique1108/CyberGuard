@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>CyberGuard | Acesso Seguro</title>
+    <style>
+        :root { --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --success: #27ae60; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; }
+        .container { background: rgba(255, 255, 255, 0.05); padding: 40px; border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); width: 380px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; font-size: 12px; margin-bottom: 8px; color: #bbb; }
+        .input-group input { width: 100%; padding: 12px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; box-sizing: border-box; outline: none; transition: 0.3s; }
+        .btn { width: 100%; padding: 12px; background: var(--accent); border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn:hover { background: #2980b9; transform: translateY(-2px); }
+        a { color: var(--accent); text-decoration: none; font-size: 12px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="login-box">
+            <h1>🛡️ CyberGuard</h1>
+            <p style="color:var(--accent); font-size: 11px; font-weight: bold; margin-bottom: 30px; letter-spacing: 2px;">AUTENTICAÇÃO DE AUDITOR</p>
+            <div class="input-group">
+                <label>Utilizador</label>
+                <input type="text" id="user" placeholder="Username">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="pass" placeholder="••••••••">
+            </div>
+            <button class="btn" onclick="fazerLogin()">Entrar</button>
+            <p style="margin-top: 20px;"><a onclick="alternarForm('register')">Novo por aqui? Criar conta</a></p>
+        </div>
+
+        <div id="register-box" style="display: none;">
+            <h1>📝 Registo</h1>
+            <p style="color:var(--success); font-size: 11px; font-weight: bold; margin-bottom: 30px; letter-spacing: 2px;">NOVA CONTA GRC</p>
+            <div class="input-group"><label>Nome Completo</label><input type="text" id="reg-nome"></div>
+            <div class="input-group"><label>Email Profissional</label><input type="email" id="reg-email" placeholder="exemplo@empresa.com"></div>
+            <div class="input-group"><label>Utilizador</label><input type="text" id="reg-user"></div>
+            <div class="input-group"><label>Password</label><input type="password" id="reg-pass"></div>
+            <button class="btn" style="background: var(--success);" onclick="processarRegisto()">Criar Conta</button>
+            <p style="margin-top: 20px;"><a onclick="alternarForm('login')" style="color:#bbb">← Voltar para Login</a></p>
+        </div>
+    </div>
+
+    <script>
+        function alternarForm(tipo) {
+            document.getElementById('login-box').style.display = tipo === 'login' ? 'block' : 'none';
+            document.getElementById('register-box').style.display = tipo === 'register' ? 'block' : 'none';
+        }
+
+        async function fazerLogin() {
+            const user = document.getElementById('user').value;
+            const pass = document.getElementById('pass').value;
+
+            try {
+                const response = await fetch(API_URL + '/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user, pass })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('usuario', JSON.stringify(data.user));
+                    // Redireciona SEMPRE para a 2fa.html, o modo (setup ou verify) é decidido lá
+                    window.location.href = data.requires2FA ? '2fa.html?mode=verify' : '2fa.html?mode=setup';
+                } else {
+                    alert("Utilizador ou Password incorretos!");
+                }
+            } catch (error) {
+                alert("Erro de ligação ao servidor.");
+            }
+        }
+
+        async function processarRegisto() {
+            const nome = document.getElementById('reg-nome').value;
+            const email = document.getElementById('reg-email').value;
+            const user = document.getElementById('reg-user').value;
+            const pass = document.getElementById('reg-pass').value;
+
+            if (!nome || !email || !user || !pass) { alert("Preencha tudo!"); return; }
+
+            try {
+                const resp = await fetch(API_URL + '/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome, email, user, pass })
+                });
+                const data = await resp.json();
+                if (data.success) { alert("Conta criada!"); alternarForm('login'); }
+            } catch (err) { alert("Erro ao registar."); }
+        }
+    </script>
+</body>
+</html>

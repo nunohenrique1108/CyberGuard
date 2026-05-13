@@ -1,0 +1,5 @@
+Relatório Automático CyberGuard
+ISO: A.5.20
+Controlo: Tratamento da segurança da informação em acordos com fornecedores.
+Status: Conforme
+Validado por: Nuno Carvalho

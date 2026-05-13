@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>CyberGuard | Centro de Remediação de Riscos</title>
+    
+    <style>
+        :root { --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --success: #27ae60; --warning: #f39c12; --danger: #e74c3c; --light: #f8f9fa; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: var(--light); display: flex; min-height: 100vh; }
+        
+        /* Sidebar Uniformizada */
+        .sidebar { width: 260px; background: var(--secondary); color: white; display: flex; flex-direction: column; position: fixed; height: 100vh; }
+        .sidebar-header { padding: 25px; font-size: 22px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; }
+        
+        .sidebar-item { padding: 15px 25px; cursor: pointer; transition: 0.3s; text-decoration: none; color: white; display: block; border-left: 4px solid transparent; }
+        .sidebar-item:hover { background: rgba(255,255,255,0.1); border-left-color: var(--accent); }
+        .active { background: rgba(255,255,255,0.2); border-left-color: var(--accent); }
+        
+        .logout-item { margin-top: auto; background: #3d465a; color: #e74c3c; border-left: 4px solid #e74c3c; padding: 15px 25px; text-decoration: none; display: block; font-weight: bold; transition: 0.3s; }
+        .logout-item:hover { background: rgba(255, 255, 255, 0.05); }
+
+        .main-content { flex: 1; margin-left: 260px; padding: 40px; }
+        
+        /* Layout e Tabelas */
+        .table-container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 15px; color: #7f8c8d; border-bottom: 2px solid #eee; font-size: 13px; text-transform: uppercase; }
+        td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
+        
+        /* Badges e Destaques */
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; color: white; }
+        .risco-badge { font-weight: bold; font-size: 12px; padding: 5px 10px; border-radius: 5px; }
+        .empresa-tag { background: #ebf5fb; color: var(--accent); padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; }
+        
+        .linha-perigo { border-left: 4px solid var(--danger); background-color: #fffafb; transition: 0.3s; }
+        .linha-perigo:hover { background-color: #fcebeb; }
+
+        .banner-sucesso { background: #e8f8f5; border: 2px solid var(--success); color: #1e8449; padding: 20px; border-radius: 8px; font-weight: bold; text-align: center; display: none; }
+
+        /* Botões */
+        .btn-acao { background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 5px; }
+        .btn-acao:hover { background: #2980b9; transform: scale(1.05); }
+        .btn-ia { background: #8e44ad; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-ia:hover { background: #9b59b6; }
+        .btn-sucesso { background: var(--success); color: white; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-sucesso:hover { background: #219a52; }
+
+        /* Modal de Tratamento de Risco */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
+        .modal-content { background-color: white; padding: 30px; border-radius: 12px; width: 50%; max-width: 650px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); position: relative; }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; font-weight: bold; cursor: pointer; color: #7f8c8d; }
+        .close-btn:hover { color: var(--danger); }
+        
+        .caixa-ia { background: #f4f6f7; border-left: 4px solid #8e44ad; padding: 15px; margin-top: 15px; border-radius: 0 8px 8px 0; font-size: 13px; color: #34495e; display: none; }
+        textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: inherit; margin-top: 10px; resize: vertical; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">🛡️ CyberGuard</div>
+        <a href="dashboard.html" class="sidebar-item">📊 Dashboard</a>
+        <a href="controlos.html" class="sidebar-item">📋 Auditoria Anexo A</a>
+        <a href="riscos.html" class="sidebar-item active">🔥 Riscos Críticos</a>
+        <a href="evidencias.html" class="sidebar-item">📁 Evidências</a>
+        <a href="historico.html" class="sidebar-item">🕒 Histórico</a>
+        <a href="recursos.html" class="sidebar-item">📚 Recursos Educativos</a>
+        <a href="perfil.html" class="sidebar-item">👤 Perfil</a>
+        <a href="index.html" class="logout-item">🚪 Sair</a>
+    </aside>
+
+    <main class="main-content">
+        <div style="margin-bottom: 30px;">
+            <h2 style="color: var(--primary); margin-bottom: 5px;">🔥 Centro de Remediação de Riscos</h2>
+            <p style="color: #7f8c8d;">Esta lista reflete <b>todos</b> os controlos que falharam nas auditorias, ordenados por nível de severidade. Utilize esta interface para aplicar planos de ação e mitigar as ameaças.</p>
+        </div>
+
+        <div id="mensagem-sucesso" class="banner-sucesso">
+            ✅ Excelente trabalho! O seu ambiente está seguro. Não existem riscos pendentes em nenhuma auditoria.
+        </div>
+
+        <div class="table-container" id="container-tabela">
+            <table id="tabela-riscos">
+                <thead>
+                    <tr>
+                        <th>Entidade / Empresa</th>
+                        <th>ID ISO</th>
+                        <th>Descrição da Vulnerabilidade</th>
+                        <th>Severidade</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody id="corpo-riscos">
+                    </tbody>
+            </table>
+        </div>
+    </main>
+
+    <div id="modal-tratamento" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="fecharModal()">&times;</span>
+            <h2 style="color: var(--primary); margin-top: 0; display: flex; align-items: center; gap: 10px;">
+                🛠️ Plano de Remediação
+            </h2>
+            <div style="background: #fee2e2; color: #991b1b; padding: 10px; border-radius: 5px; font-weight: bold; margin-bottom: 20px;">
+                Alvo: <span id="modal-id"></span> - <span id="modal-nome"></span>
+            </div>
+
+            <label style="font-weight: bold; color: var(--secondary);">Plano de Ação Corretiva:</label>
+            <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px; margin-bottom: 5px;">
+                🔒 O seu comentário será guardado no histórico e assinado digitalmente com a data/hora.
+            </div>
+            <textarea id="texto-plano" placeholder="Descreva os passos técnicos ou administrativos que vão ser aplicados para mitigar este risco..."></textarea>
+            
+            <div style="margin-top: 10px;">
+                <button class="btn-ia" onclick="sugerirMitigacaoIA()">✨ Pedir Sugestão à IA</button>
+            </div>
+
+            <div id="caixa-sugestao-ia" class="caixa-ia">
+                <strong>🤖 Sugestão do Gemini IA:</strong><br>
+                <span id="texto-ia-animado"></span>
+            </div>
+
+            <div style="text-align: right; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                <button type="button" class="btn-validar" style="background: #95a5a6; color: white;" onclick="fecharModal()">Cancelar</button>
+                <button type="button" class="btn-sucesso" onclick="resolverRisco()">✅ Guardar Plano e Mitigar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const user = JSON.parse(localStorage.getItem('usuario')) || { nome: "Nuno Carvalho" };
+        let riscoAtual = null;
+
+        async function carregarRiscosUrgentes() {
+            try {
+                const response = await fetch(API_URL + '/api/riscos-urgentes');
+                if (!response.ok) throw new Error("Erro de servidor.");
+
+                const riscos = await response.json();
+                const tbody = document.getElementById('corpo-riscos');
+                tbody.innerHTML = '';
+
+                if (riscos.length === 0) {
+                    document.getElementById('container-tabela').style.display = 'none';
+                    document.getElementById('mensagem-sucesso').style.display = 'block';
+                    return;
+                }
+
+                document.getElementById('container-tabela').style.display = 'block';
+                document.getElementById('mensagem-sucesso').style.display = 'none';
+
+                riscos.forEach(r => {
+                    const nomeEmpresa = r.nome_empresa || 'Empresa Padrão';
+                    
+                    // Definir cores das etiquetas baseado na severidade do risco
+                    let corRisco = '';
+                    let iconeRisco = '';
+                    if (r.risco === 'CRÍTICO') { corRisco = 'var(--danger)'; iconeRisco = '🚨'; }
+                    else if (r.risco === 'MÉDIO') { corRisco = 'var(--warning)'; iconeRisco = '⚠️'; }
+                    else { corRisco = 'var(--success)'; iconeRisco = 'ℹ️'; }
+                    
+                    tbody.innerHTML += `
+                        <tr class="linha-perigo">
+                            <td><span class="empresa-tag">🏢 ${nomeEmpresa}</span></td>
+                            <td><strong>${r.id_controlo}</strong></td>
+                            <td>${r.nome_controlo}</td>
+                            <td><span class="risco-badge" style="background-color: #fefefe; color: ${corRisco}; border: 1px solid ${corRisco};">${iconeRisco} ${r.risco}</span></td>
+                            <td>
+                                <button class="btn-acao" onclick="abrirModal('${r.id_controlo}', '${r.nome_controlo.replace(/'/g, "\\'")}')">
+                                    🛠️ Tratar Risco
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+            } catch (err) {
+                console.error("Erro:", err);
+            }
+        }
+
+        // --- Lógica do Modal de Tratamento ---
+        function abrirModal(id, nome) {
+            riscoAtual = id;
+            document.getElementById('modal-id').innerText = id;
+            document.getElementById('modal-nome').innerText = nome;
+            document.getElementById('texto-plano').value = '';
+            document.getElementById('caixa-sugestao-ia').style.display = 'none';
+            document.getElementById('texto-ia-animado').innerText = '';
+            
+            document.getElementById('modal-tratamento').style.display = 'flex';
+        }
+
+        function fecharModal() {
+            document.getElementById('modal-tratamento').style.display = 'none';
+            riscoAtual = null;
+        }
+
+        // Simulação de IA a escrever a solução
+        function sugerirMitigacaoIA() {
+            const caixa = document.getElementById('caixa-sugestao-ia');
+            const textoLocal = document.getElementById('texto-ia-animado');
+            caixa.style.display = 'block';
+            textoLocal.innerHTML = "A analisar a base de dados de vulnerabilidades ISO 27001... ⏳";
+            
+            setTimeout(() => {
+                const sugestoes = [
+                    "Implementar autenticação multifator (MFA) obrigatória para todos os acessos de nível administrador. Rever as permissões de acesso através do princípio de 'Least Privilege'.",
+                    "Atualizar a política de passwords e forçar a rotação criptográfica. Recomenda-se a ativação do módulo de auditoria de logs diários para identificar tentativas de intrusão.",
+                    "Isolar a rede afetada numa VLAN dedicada e aplicar regras restritas de Firewall. Agendar um teste de penetração (Pentest) nos próximos 15 dias para validar a mitigação."
+                ];
+                const solucaoAleatoria = sugestoes[Math.floor(Math.random() * sugestoes.length)];
+                
+                textoLocal.innerHTML = `<b>Recomendação:</b> ${solucaoAleatoria}`;
+                document.getElementById('texto-plano').value = solucaoAleatoria; 
+            }, 1500);
+        }
+
+        // Comunica com a nova rota da BD para Guardar o Plano e Mitigar
+        async function resolverRisco() {
+            const plano = document.getElementById('texto-plano').value;
+            
+            if(plano.trim() === '') {
+                alert("⚠️ Por favor, escreva o Plano de Ação antes de mitigar o risco.");
+                return;
+            }
+
+            try {
+                const response = await fetch(API_URL + '/api/mitigar-risco', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        id_controlo: riscoAtual, 
+                        plano_acao: plano,
+                        auditor: user.nome 
+                    })
+                });
+
+                const result = await response.json();
+                
+                if(result.success) {
+                    alert(`✅ Registado! O plano de ação para o risco ${riscoAtual} foi guardado na Base de Dados e assinado por si.\nO estado passou a CONFORME.`);
+                    fecharModal();
+                    carregarRiscosUrgentes(); 
+                }
+
+            } catch (err) {
+                console.error("Erro ao mitigar risco:", err);
+                alert("Erro ao comunicar com a Base de Dados.");
+            }
+        }
+
+        window.onload = carregarRiscosUrgentes;
+    </script>
+</body>
+</html>

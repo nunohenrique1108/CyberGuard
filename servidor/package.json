@@ -1,0 +1,19 @@
+{
+  "name": "cyberguard-backend",
+  "version": "1.0.0",
+  "description": "Servidor Backend do CyberGuard",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "latest",
+    "cors": "latest",
+    "dotenv": "latest",
+    "express": "latest",
+    "multer": "latest",
+    "mysql2": "latest",
+    "qrcode": "latest",
+    "speakeasy": "latest"
+  }
+}

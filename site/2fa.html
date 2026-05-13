@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>CyberGuard | Segurança 2FA</title>
+    <style>
+        :root { --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --success: #27ae60; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; }
+        .container { background: rgba(255, 255, 255, 0.05); padding: 40px; border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); width: 380px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
+        .input-group { margin-bottom: 20px; text-align: center; }
+        .input-group input { width: 100%; padding: 12px; border-radius: 5px; border: 1px solid var(--accent); background: rgba(255,255,255,0.1); color: white; font-size: 24px; text-align: center; letter-spacing: 5px; outline: none; }
+        .btn { width: 100%; padding: 12px; background: var(--success); border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        img { background: white; padding: 10px; border-radius: 10px; margin-bottom: 20px; width: 180px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 id="titulo">Segurança 2FA</h2>
+        <p id="instrucao" style="font-size: 13px; color: #bbb; margin-bottom: 20px;">Introduz o código da App Google Authenticator.</p>
+
+        <div id="setup-area" style="display: none;">
+            <img id="qrcode-img" src="" alt="QR Code">
+            <p style="font-size: 11px; margin-bottom: 15px;">Lê o código acima com a App pela primeira vez.</p>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="2fa-token" maxlength="6" placeholder="000000">
+        </div>
+        <button class="btn" onclick="validar()">Confirmar Acesso</button>
+    </div>
+
+    <script>
+        const usuario = JSON.parse(localStorage.getItem('usuario'));
+        const mode = new URLSearchParams(window.location.search).get('mode');
+
+        async function init() {
+            if (mode === 'setup') {
+                document.getElementById('titulo').innerText = "Configurar 2FA";
+                document.getElementById('setup-area').style.display = 'block';
+                const res = await fetch(API_URL + '/api/2fa/setup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: usuario.id })
+                });
+                const dados = await res.json();
+                document.getElementById('qrcode-img').src = dados.qrCode;
+            }
+        }
+
+        async function validar() {
+            const token = document.getElementById('2fa-token').value;
+            const res = await fetch(API_URL + '/api/2fa/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: usuario.id, token })
+            });
+            const dados = await res.json();
+            if (dados.success) window.location.href = 'dashboard.html';
+            else alert("Código inválido!");
+        }
+        window.onload = init;
+    </script>
+</body>
+</html>

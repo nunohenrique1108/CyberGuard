@@ -1,0 +1,5 @@
+Relatório Automático CyberGuard
+ISO: A.5.8
+Controlo: Segurança da informação na gestão de projetos.
+Status: Conforme
+Validado por: Nuno Carvalho

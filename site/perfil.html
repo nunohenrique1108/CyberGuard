@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>CyberGuard | O Meu Perfil</title>
+    <style>
+        :root { --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --light: #f8f9fa; --danger: #e74c3c; --success: #27ae60; --warning: #f39c12; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: var(--light); display: flex; }
+        
+        /* Sidebar Uniformizada */
+        .sidebar { width: 260px; background: var(--secondary); color: white; display: flex; flex-direction: column; position: fixed; height: 100vh; }
+        .sidebar-header { padding: 25px; font-size: 22px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; }
+        
+        .sidebar-item { 
+            padding: 15px 25px; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            text-decoration: none; 
+            color: white; 
+            display: block; 
+            border-left: 4px solid transparent; 
+        }
+        .sidebar-item:hover { background: rgba(255,255,255,0.1); border-left-color: var(--accent); }
+        .active { background: rgba(255,255,255,0.2); border-left-color: var(--accent); }
+        
+        /* Botão Sair - Design Idêntico às outras páginas */
+        .logout-item { 
+            margin-top: auto; 
+            background: #3d465a; 
+            color: #e74c3c; 
+            border-left: 4px solid #e74c3c; 
+            padding: 15px 25px; 
+            text-decoration: none; 
+            display: block; 
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .logout-item:hover { background: rgba(255, 255, 255, 0.05); }
+
+        .main-content { flex: 1; margin-left: 260px; padding: 40px; }
+        .profile-container { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .avatar-circle { width: 100px; height: 100px; background: var(--accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 20px; font-weight: bold; }
+        
+        .info-group { margin-bottom: 15px; }
+        .info-label { font-size: 11px; color: #7f8c8d; text-transform: uppercase; font-weight: bold; }
+        .info-value { font-size: 16px; color: var(--primary); margin-top: 5px; }
+        
+        .pass-box { margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
+        .input-pass { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; box-sizing: border-box; outline: none; }
+        .btn-pass { width: 100%; background: var(--accent); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; margin-bottom: 10px; }
+        .btn-pass:hover { opacity: 0.9; }
+
+        /* Botão Novo para Reset de 2FA */
+        .btn-reset-2fa { width: 100%; background: var(--warning); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-reset-2fa:hover { background: #d68910; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
+        .badge-acao { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #e8f4fd; color: var(--accent); }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">🛡️ CyberGuard</div>
+        <a href="dashboard.html" class="sidebar-item">📊 Dashboard</a>
+        <a href="controlos.html" class="sidebar-item">📋 Auditoria Anexo A</a>
+        <a href="riscos.html" class="sidebar-item">🔥 Riscos Críticos</a>
+        <a href="evidencias.html" class="sidebar-item">📁 Evidências</a>
+        <a href="historico.html" class="sidebar-item">🕒 Histórico</a>
+        <a href="recursos.html" class="sidebar-item">📚 Recursos Educativos</a>
+        <a href="perfil.html" class="sidebar-item active">👤 Perfil</a>
+        <a href="index.html" class="logout-item">🚪 Sair</a>
+    </aside>
+
+    <main class="main-content">
+        <h2 style="color: var(--primary); margin-bottom: 30px;">👤 O Meu Perfil de Auditor</h2>
+        <div class="profile-container">
+            <div class="card">
+                <div class="avatar-circle" id="avatar-letra">U</div>
+                <div class="info-group">
+                    <div class="info-label">Nome Completo</div>
+                    <div class="info-value" id="user-nome">Carregando...</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">E-mail</div>
+                    <div class="info-value" id="user-email">Carregando...</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Nível de Acesso</div>
+                    <div class="info-value"><span class="badge-acao">Auditor ISO 27001</span></div>
+                </div>
+
+                <div class="pass-box">
+                    <div class="info-label" style="margin-bottom: 10px;">Segurança da Conta</div>
+                    <input type="password" id="nova-pass" class="input-pass" placeholder="Nova Password">
+                    <button class="btn-pass" onclick="alterarPass()">Atualizar Password</button>
+                    <button class="btn-reset-2fa" onclick="reset2FA()">⚠️ Resetar Autenticação 2FA</button>
+                    <p style="font-size: 10px; color: #999; margin-top: 8px; text-align: center;">Ao resetar, será solicitado um novo QR Code no próximo login.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-top: 0;">🕒 As Minhas Últimas Ações</h3>
+                <p style="color: #7f8c8d; font-size: 13px; margin-bottom: 20px;">Histórico de modificações registadas por este utilizador.</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Ação</th>
+                            <th>ID Controlo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-historico">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function carregarPerfil() {
+            const user = JSON.parse(localStorage.getItem('usuario'));
+            if(user) {
+                document.getElementById('user-nome').innerText = user.nome;
+                document.getElementById('user-email').innerText = user.username + "@cyberguard.pt";
+                document.getElementById('avatar-letra').innerText = user.nome.charAt(0).toUpperCase();
+            }
+            
+            try {
+                const resp = await fetch(API_URL + '/api/logs');
+                const logs = await resp.json();
+                const tbody = document.getElementById('lista-historico');
+                
+                tbody.innerHTML = logs.slice(0, 10).map(l => `
+                    <tr>
+                        <td style="color: #7f8c8d;">${new Date(l.data_hora).toLocaleString()}</td>
+                        <td><span class="badge-acao">${l.acao}</span></td>
+                        <td><strong>${l.id_controlo}</strong></td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error("Erro ao carregar logs:", err);
+            }
+        }
+
+        async function alterarPass() {
+            const user = JSON.parse(localStorage.getItem('usuario'));
+            const pass = document.getElementById('nova-pass').value;
+
+            if(!pass) return alert("⚠️ Digite a nova password!");
+
+            try {
+                const resp = await fetch(API_URL + '/api/update-pass', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        username: user.username, 
+                        nova_pass: pass 
+                    })
+                });
+
+                if(resp.ok) {
+                    alert("✅ Password atualizada com sucesso!");
+                    document.getElementById('nova-pass').value = '';
+                } else {
+                    alert("❌ Falha ao atualizar password.");
+                }
+            } catch (err) {
+                alert("❌ Erro de ligação ao servidor.");
+            }
+        }
+
+        // Nova Função para Resetar o 2FA
+        async function reset2FA() {
+            const user = JSON.parse(localStorage.getItem('usuario'));
+            if (!confirm("Tem a certeza que deseja resetar o 2FA? Terá de configurar um novo QR Code no próximo login.")) return;
+
+            try {
+                const resp = await fetch(API_URL + '/api/2fa/reset', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ userId: user.id })
+                });
+
+                const data = await resp.json();
+                if (data.success) {
+                    alert("✅ Autenticação 2FA removida. Configure novamente no seu próximo acesso.");
+                } else {
+                    alert("❌ Erro ao resetar: " + data.message);
+                }
+            } catch (err) {
+                alert("❌ Erro de ligação ao servidor.");
+            }
+        }
+
+        window.onload = carregarPerfil;
+    </script>
+</body>
+</html>

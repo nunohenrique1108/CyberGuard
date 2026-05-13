@@ -1,0 +1,5 @@
+Relatório Automático CyberGuard
+ISO: A.5.36
+Controlo: Conformidade com políticas, regras e normas de segurança.
+Status: Conforme
+Validado por: Nuno Carvalho

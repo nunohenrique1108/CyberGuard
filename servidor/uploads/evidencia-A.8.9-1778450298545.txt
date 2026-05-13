@@ -1,0 +1,5 @@
+Relatório Automático CyberGuard
+ISO: A.8.9
+Controlo: Gestão de configurações.
+Status: Conforme
+Validado por: Nuno Carvalho

@@ -1,0 +1,5 @@
+Relatório Automático CyberGuard
+ISO: A.5.1
+Controlo: Políticas de segurança da informação.
+Status: Conforme
+Validado por: Nuno Carvalho

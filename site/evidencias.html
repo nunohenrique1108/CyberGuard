@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>CyberGuard | Repositório de Evidências</title>
+    <style>
+        :root { --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --success: #27ae60; --warning: #f39c12; --danger: #e74c3c; --light: #f8f9fa; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: var(--light); display: flex; min-height: 100vh; }
+        
+        /* Sidebar Uniformizada */
+        .sidebar { width: 260px; background: var(--secondary); color: white; display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 100; }
+        .sidebar-header { padding: 25px; font-size: 22px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; }
+        
+        .sidebar-item { 
+            padding: 15px 25px; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            text-decoration: none; 
+            color: white; 
+            display: block; 
+            border-left: 4px solid transparent; 
+        }
+        .sidebar-item:hover { background: rgba(255,255,255,0.1); border-left-color: var(--accent); }
+        .active { background: rgba(255,255,255,0.2); border-left-color: var(--accent); }
+        
+        /* Botão Sair */
+        .logout-item { 
+            margin-top: auto; 
+            background: #3d465a; 
+            color: #e74c3c; 
+            border-left: 4px solid #e74c3c; 
+            padding: 15px 25px; 
+            text-decoration: none; 
+            display: block; 
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .logout-item:hover { background: rgba(255, 255, 255, 0.05); }
+
+        /* Content */
+        .main-content { flex: 1; margin-left: 260px; padding: 40px; }
+        
+        /* Dropzone / Upload Area */
+        .upload-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 40px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--accent); flex-wrap: wrap; gap: 20px;}
+        .upload-info h3 { margin: 0 0 5px 0; color: var(--primary); }
+        .upload-info p { margin: 0; color: #7f8c8d; font-size: 13px; }
+        
+        .upload-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap;}
+        .select-controlo { padding: 10px; border-radius: 6px; border: 1px solid #ddd; width: 250px; outline: none; }
+        .file-input-custom { padding: 8px; font-size: 13px; }
+        
+        .btn-upload { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-upload:hover { background: var(--accent); }
+        
+        .btn-ia { background: #8e44ad; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-ia:hover { background: #9b59b6; transform: scale(1.05); }
+
+        /* Pastas e Ficheiros */
+        .repo-container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .repo-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        
+        .folder-card { border: 1px solid #e0e6ed; border-radius: 8px; margin-bottom: 15px; overflow: hidden; }
+        .folder-header { background: #f8fafc; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.3s; }
+        .folder-header:hover { background: #edf2f7; }
+        .folder-title { font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+        .folder-count { background: #e2e8f0; color: #64748b; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+        
+        .folder-content { display: none; padding: 0; background: white; border-top: 1px solid #e0e6ed; }
+        .folder-content.open { display: block; animation: slideDown 0.3s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .file-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #f1f5f9; transition: 0.2s; }
+        .file-row:hover { background: #f8fafc; }
+        .file-row:last-child { border-bottom: none; }
+        
+        .file-info { display: flex; align-items: center; gap: 15px; }
+        .file-icon { font-size: 24px; }
+        .file-name { font-weight: 600; color: #334155; margin: 0; }
+        .file-meta { margin: 3px 0 0 0; font-size: 12px; color: #94a3b8; }
+        
+        .year-badge { background: var(--accent); color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .btn-dl { background: #ecfdf5; color: var(--success); border: 1px solid #a7f3d0; text-decoration: none; padding: 6px 15px; border-radius: 5px; font-size: 12px; font-weight: bold; transition: 0.3s; }
+        .btn-dl:hover { background: var(--success); color: white; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">🛡️ CyberGuard</div>
+        <a href="dashboard.html" class="sidebar-item">📊 Dashboard</a>
+        <a href="controlos.html" class="sidebar-item">📋 Auditoria Anexo A</a>
+        <a href="riscos.html" class="sidebar-item">🔥 Riscos Críticos</a>
+        <a href="evidencias.html" class="sidebar-item active">📁 Evidências</a>
+        <a href="historico.html" class="sidebar-item">🕒 Histórico</a>
+        <a href="recursos.html" class="sidebar-item">📚 Recursos Educativos</a>
+        <a href="perfil.html" class="sidebar-item">👤 Perfil</a>
+        <a href="index.html" class="logout-item">🚪 Sair</a>
+    </aside>
+
+    <main class="main-content">
+        <h2 style="color: var(--primary); margin-bottom: 20px;">📁 Gestão Documental e Evidências</h2>
+        <p style="color: #7f8c8d; margin-bottom: 30px;">O repositório centralizado de provas físicas para a certificação ISO 27001.</p>
+
+        <div class="upload-card">
+            <div class="upload-info">
+                <h3>Criar ou Submeter Evidência</h3>
+                <p>Anexe o documento final ou gere um template oficial com IA.</p>
+            </div>
+            <div class="upload-controls">
+                <select id="select-controlos" class="select-controlo">
+                    <option value="">-- Selecione o Controlo --</option>
+                </select>
+                <input type="file" id="file-input" class="file-input-custom">
+                <button class="btn-upload" onclick="fazerUpload()">📤 Upload</button>
+                <span style="color:#ddd;">|</span>
+                <button class="btn-ia" onclick="gerarDocumentoIA()">🤖 Gerar Modelo IA</button>
+            </div>
+        </div>
+
+        <div class="repo-container">
+            <div class="repo-header">
+                <h3 style="margin: 0; color: var(--primary);">Estrutura de Pastas por Controlo</h3>
+                <span style="font-size: 13px; color: #7f8c8d;">Organizado do mais recente para o mais antigo</span>
+            </div>
+            
+            <div id="lista-evidencias">
+                <p style="text-align: center; color: #999;">A carregar repositório...</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function carregarSelect() {
+            try {
+                const resp = await fetch(API_URL + '/api/controlos');
+                const controlos = await resp.json();
+                const select = document.getElementById('select-controlos');
+                controlos.forEach(c => {
+                    const option = document.createElement('option');
+                    option.value = c.id_controlo;
+                    option.textContent = `${c.id_controlo} - ${c.nome_controlo}`;
+                    select.appendChild(option);
+                });
+            } catch (err) {
+                console.error("Erro ao carregar select:", err);
+            }
+        }
+
+        function toggleFolder(id) {
+            const content = document.getElementById(`folder-content-${id}`);
+            const icone = document.getElementById(`icon-${id}`);
+            
+            if (content.classList.contains('open')) {
+                content.classList.remove('open');
+                icone.innerText = '📁';
+            } else {
+                content.classList.add('open');
+                icone.innerText = '📂';
+            }
+        }
+
+        async function carregarEvidencias() {
+            try {
+                const resp = await fetch(API_URL + '/api/evidencias');
+                const evidencias = await resp.json();
+                const container = document.getElementById('lista-evidencias');
+                container.innerHTML = '';
+
+                if (evidencias.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color:#999;">Nenhum documento submetido ainda.</p>';
+                    return;
+                }
+
+                const evidGrupo = evidencias.reduce((acc, evid) => {
+                    const chave = evid.id_controlo || 'Outros';
+                    if (!acc[chave]) acc[chave] = [];
+                    acc[chave].push(evid);
+                    return acc;
+                }, {});
+
+                for (const [controloId, ficheiros] of Object.entries(evidGrupo)) {
+                    ficheiros.sort((a, b) => new Date(b.data_upload) - new Date(a.data_upload));
+                    
+                    const ficheirosHTML = ficheiros.map(f => {
+                        const dataSubmissao = new Date(f.data_upload);
+                        const anoFicheiro = dataSubmissao.getFullYear();
+                        const dataFormatada = dataSubmissao.toLocaleString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' });
+                        
+                        let iconeFile = '📄';
+                        if (f.nome_arquivo.includes('.pdf')) iconeFile = '📕';
+                        else if (f.nome_arquivo.includes('.html')) iconeFile = '🌐';
+                        else if (f.nome_arquivo.includes('.txt')) iconeFile = '📝';
+
+                        // Mudei o "Download" para "Abrir/Ver" porque no browser HTML abre diretamente
+                        return `
+                            <div class="file-row">
+                                <div class="file-info">
+                                    <div class="file-icon">${iconeFile}</div>
+                                    <div>
+                                        <p class="file-name">${f.nome_arquivo} <span class="year-badge">${anoFicheiro}</span></p>
+                                        <p class="file-meta">Gerado em: ${dataFormatada}</p>
+                                    </div>
+                                </div>
+                                <a href="http://localhost:5000/${f.caminho.replace(/\\/g, '/')}" target="_blank" class="btn-dl">👁️ Abrir / Ver</a>
+                            </div>
+                        `;
+                    }).join('');
+
+                    const folderId = controloId.replace(/[^a-zA-Z0-9]/g, '-'); 
+                    
+                    container.innerHTML += `
+                        <div class="folder-card">
+                            <div class="folder-header" onclick="toggleFolder('${folderId}')">
+                                <div class="folder-title">
+                                    <span id="icon-${folderId}">📁</span> Controlo ISO: ${controloId}
+                                </div>
+                                <div class="folder-count">${ficheiros.length} Documento(s)</div>
+                            </div>
+                            <div class="folder-content" id="folder-content-${folderId}">
+                                ${ficheirosHTML}
+                            </div>
+                        </div>
+                    `;
+                }
+
+            } catch (err) {
+                console.error("Erro:", err);
+                document.getElementById('lista-evidencias').innerHTML = '<p style="color: red;">Erro ao contactar o servidor.</p>';
+            }
+        }
+
+        async function fazerUpload() {
+            const fileInput = document.getElementById('file-input');
+            const idControlo = document.getElementById('select-controlos').value;
+
+            if (!fileInput.files[0] || !idControlo) {
+                return alert("⚠️ Selecione um ficheiro e o controlo correspondente!");
+            }
+
+            const formData = new FormData();
+            formData.append('ficheiro', fileInput.files[0]);
+            formData.append('id_controlo', idControlo);
+
+            try {
+                const btn = document.querySelector('.btn-upload');
+                const btnTexto = btn.innerHTML;
+                btn.innerHTML = '⏳...';
+                btn.disabled = true;
+
+                const resp = await fetch(API_URL + '/api/evidencias/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (resp.ok) {
+                    alert("✅ Evidência carregada com sucesso!");
+                    fileInput.value = ''; 
+                    carregarEvidencias(); 
+                } else {
+                    alert("❌ Erro no upload.");
+                }
+
+                btn.innerHTML = btnTexto;
+                btn.disabled = false;
+
+            } catch (err) {
+                alert("❌ Erro de ligação ao servidor.");
+            }
+        }
+
+        // NOVA FUNÇÃO: Gerar Documento Oficial HTML via IA
+        async function gerarDocumentoIA() {
+            const select = document.getElementById('select-controlos');
+            const idControlo = select.value;
+            const nomeControlo = select.options[select.selectedIndex]?.text.split(' - ')[1] || 'Auditoria';
+
+            if (!idControlo) {
+                return alert("⚠️ Por favor, selecione um controlo na lista pendente primeiro!");
+            }
+
+            try {
+                const btn = document.querySelector('.btn-ia');
+                const btnTexto = btn.innerHTML;
+                btn.innerHTML = '⏳ A processar...';
+                btn.disabled = true;
+
+                const resp = await fetch(API_URL + '/api/gerar-evidencia-ia', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_controlo: idControlo, nome_controlo: nomeControlo })
+                });
+
+                if (resp.ok) {
+                    alert("✅ Documento de Conformidade HTML gerado com sucesso! Verifique a pasta abaixo.");
+                    carregarEvidencias(); // Recarrega as pastas imediatamente
+                } else {
+                    alert("❌ Erro no servidor ao gerar documento.");
+                }
+
+                btn.innerHTML = btnTexto;
+                btn.disabled = false;
+
+            } catch (err) {
+                alert("❌ Erro de ligação ao servidor.");
+            }
+        }
+
+        window.onload = () => {
+            carregarSelect();
+            carregarEvidencias();
+        };
+    </script>
+</body>
+</html>

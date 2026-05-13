@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberGuard | Bem-vindo</title>
+    <style>
+        :root { --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --light: #ecf0f1; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--primary); color: white; overflow-x: hidden; }
+        .hero { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); padding: 20px; }
+        .logo-container h1 { font-size: 3.5rem; margin: 0; text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .logo-container p { color: var(--accent); letter-spacing: 5px; font-weight: bold; margin-bottom: 40px; }
+        .btn-group { display: flex; gap: 20px; }
+        .btn { padding: 15px 35px; border-radius: 5px; text-decoration: none; font-weight: bold; transition: 0.3s; border: none; cursor: pointer; font-size: 1rem; }
+        .btn-blue { background: var(--accent); color: white; }
+        .btn-outline { border: 2px solid white; color: white; background: transparent; }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
+        .about-section { padding: 120px 20px; background: white; color: var(--primary); text-align: center; }
+        .about-container { max-width: 800px; margin: 0 auto; }
+        .about-section h2 { font-size: 2.5rem; color: var(--accent); margin-bottom: 30px; }
+        .about-section p { font-size: 1.2rem; line-height: 1.8; color: #444; margin-bottom: 20px; }
+        footer { padding: 40px; text-align: center; background: #1a252f; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+
+    <section class="hero">
+        <div class="logo-container">
+            <h1>🛡️ CyberGuard</h1>
+            <p>ISO 27001 GRC PLATFORM</p>
+        </div>
+        <div class="btn-group">
+            <a href="index.html" class="btn btn-blue">Entrar no Sistema</a>
+            <a href="index.html?action=register" class="btn btn-outline">Criar Conta</a>
+            <a href="#sobre" class="btn btn-outline" style="opacity: 0.8;">Sobre Nós</a>
+        </div>
+    </section>
+
+    <section id="sobre" class="about-section">
+        <div class="about-container">
+            <h2>Gestão de Conformidade Simplificada</h2>
+            <p>A <strong>CyberGuard Enterprise</strong> é uma solução desenvolvida para auditores que procuram rigor e agilidade na norma ISO 27001.</p>
+            <p>Centralizamos a monitorização de controlos, a gestão de evidências digitais e a visualização de métricas de conformidade num único dashboard intuitivo.</p>
+        </div>
+    </section>
+
+    <footer>&copy; 2026 CyberGuard Enterprise - Professional Security Solutions.</footer>
+
+</body>
+</html>

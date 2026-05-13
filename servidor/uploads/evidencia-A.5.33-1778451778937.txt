@@ -1,0 +1,5 @@
+Relatório Automático CyberGuard
+ISO: A.5.33
+Controlo: Proteção de registos (Records protection).
+Status: Conforme
+Validado por: Nuno Carvalho
