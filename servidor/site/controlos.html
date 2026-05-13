@@ -123,7 +123,7 @@
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2>📋 Gestão de Conformidade: <span id="nome-empresa-titulo" style="color: var(--accent);"></span></h2>
-                <button id="btn-global-ia" class="btn-relatorio-ia" onclick="gerarRelatorioProfissional()">✨ Gerar Relatório Global IA</button>
+                <button id="btn-global-ia" class="btn-relatorio-ia" onclick="window.location.href='relatorio.html'">✨ Gerar Relatório Global IA</button>
             </div>
 
             <div class="stats-grid">
@@ -350,93 +350,6 @@
                 }
             } catch (err) {
                 console.error("Erro ao validar:", err);
-            }
-        }
-
-        // PDF RELATÓRIO IA GLOBAL
-        async function gerarRelatorioProfissional() {
-            const btn = document.getElementById('btn-global-ia');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = "⏳ A gerar Relatório de 6 páginas...";
-            btn.disabled = true;
-
-            try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                
-                const [resIA, resCtrl] = await Promise.all([
-                    fetch(API_URL + '/api/relatorio-ia'),
-                    fetch(API_URL + '/api/controlos')
-                ]);
-                
-                if (!resIA.ok) throw new Error("Erro na resposta do servidor");
-                
-                const dadosIA = await resIA.json();
-                const todosControlos = await resCtrl.json();
-
-                doc.setFillColor(44, 62, 80); 
-                doc.rect(0, 0, 210, 40, 'F');
-                doc.setTextColor(255, 255, 255);
-                doc.setFontSize(22);
-                doc.text("CyberGuard | Relatório de Conformidade ISO 27001", 105, 25, { align: 'center' });
-
-                doc.setTextColor(44, 62, 80);
-                doc.setFontSize(16);
-                doc.text(`Score Global de Conformidade: ${dadosIA.score}%`, 105, 60, { align: 'center' });
-                
-                doc.setLineWidth(10);
-                doc.setDrawColor(230, 230, 230);
-                doc.circle(105, 95, 20, 'S'); 
-                
-                doc.setDrawColor(46, 204, 113);
-                if(dadosIA.score > 0) { doc.circle(105, 95, 20, 'S'); }
-
-                doc.setFontSize(14);
-                doc.text("Análise de Risco Estratégica:", 15, 140);
-                doc.setFontSize(11);
-                doc.setFont("helvetica", "normal");
-                const resumoTexto = doc.splitTextToSize(dadosIA.resumo || "Análise indisponível.", 180);
-                doc.text(resumoTexto, 15, 150);
-
-                doc.addPage();
-                doc.setFontSize(16);
-                doc.text("Plano de Ação Corretiva (PAC)", 15, 20);
-                doc.autoTable({
-                    startY: 30,
-                    head: [['ISO', 'Falha Detetada', 'Solução Recomendada']],
-                    body: dadosIA.plano.map(p => [p.controlo, p.problema, p.solucao]),
-                    theme: 'striped',
-                    headStyles: { fillColor: [44, 62, 80] }
-                });
-
-                doc.addPage();
-                doc.text("Detalhes Completos da Avaliação", 15, 20);
-                doc.autoTable({
-                    startY: 30,
-                    head: [['Controlo', 'Resultado']],
-                    body: todosControlos.map(c => [c.nome_controlo, c.estado]),
-                    didParseCell: function(data) {
-                        if (data.cell.text[0] === 'CONFORME') data.cell.styles.textColor = [39, 174, 96];
-                        else data.cell.styles.textColor = [192, 57, 43];
-                    }
-                });
-
-                const totalPages = doc.internal.getNumberOfPages();
-                for (let i = 1; i <= totalPages; i++) {
-                    doc.setPage(i);
-                    doc.setFontSize(9);
-                    doc.text(`Página ${i} de ${totalPages} | CyberGuard GRC`, 105, 285, { align: 'center' });
-                }
-
-                doc.save(`Relatorio_ISO27001_Final.pdf`);
-                alert("✅ Relatório gerado com sucesso!");
-
-            } catch (err) {
-                console.error("Erro detalhado:", err);
-                alert("Erro ao gerar PDF: " + err.message);
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
             }
         }
     </script>
