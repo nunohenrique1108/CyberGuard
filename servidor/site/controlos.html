@@ -7,351 +7,437 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     
     <style>
-        :root { --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --success: #27ae60; --warning: #f39c12; --danger: #e74c3c; --light: #f8f9fa; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: var(--light); display: flex; min-height: 100vh; }
+        :root { --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --success: #27ae60; --warning: #f39c12; --danger: #e74c3c; --light: #f4f7f6; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: var(--light); display: flex; min-height: 100vh; }
         
         /* Sidebar Uniformizada */
-        .sidebar { width: 260px; background: var(--secondary); color: white; display: flex; flex-direction: column; position: fixed; height: 100vh; }
-        .sidebar-header { padding: 25px; font-size: 22px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; }
-        
+        .sidebar { width: 260px; background: var(--secondary); color: white; display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 100; }
+        .sidebar-header { padding: 25px; font-size: 22px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; color: #ecf0f1; }
         .sidebar-item { padding: 15px 25px; cursor: pointer; transition: 0.3s; text-decoration: none; color: white; display: block; border-left: 4px solid transparent; }
         .sidebar-item:hover { background: rgba(255,255,255,0.1); border-left-color: var(--accent); }
         .active { background: rgba(255,255,255,0.2); border-left-color: var(--accent); }
-        
-        .logout-item { margin-top: auto; background: #3d465a; color: #e74c3c; border-left: 4px solid #e74c3c; padding: 15px 25px; text-decoration: none; display: block; font-weight: bold; transition: 0.3s; }
-        .logout-item:hover { background: rgba(255, 255, 255, 0.05); }
+        .logout-item { margin-top: auto; background: #2c3e50; color: #e74c3c; border-top: 1px solid rgba(255,255,255,0.05); padding: 20px 25px; text-decoration: none; display: block; font-weight: bold; transition: 0.3s; }
+        .logout-item:hover { background: rgba(231, 76, 60, 0.1); }
 
         .main-content { flex: 1; margin-left: 260px; padding: 40px; }
         
-        /* Banner de Alerta Crítico */
-        #alert-banner { display: none; background: #fee2e2; border: 2px solid var(--danger); color: #991b1b; padding: 15px; border-radius: 8px; margin-bottom: 25px; font-weight: bold; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
-
-        /* Cards de Resumo */
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid var(--accent); }
-        .stat-card h3 { margin: 0; font-size: 14px; color: #7f8c8d; text-transform: uppercase; }
-        .stat-card p { margin: 10px 0 0; font-size: 28px; font-weight: bold; color: var(--primary); }
-
-        .table-container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 15px; color: #7f8c8d; border-bottom: 2px solid #eee; font-size: 13px; }
-        td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
+        /* Top Bar Utilities */
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
+        .btn-nova-auditoria { background: #5a67d8; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+        .btn-nova-auditoria:hover { background: #4c51bf; transform: translateY(-2px); }
         
-        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; color: white; }
-        .risco-badge { font-weight: bold; font-size: 12px; }
-        .risco-CRÍTICO { color: var(--danger); }
-        .risco-MÉDIO { color: var(--warning); }
-        .risco-BAIXO { color: var(--success); }
+        .btn-relatorio-ia { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; transition: 0.3s; text-decoration: none;}
+        .btn-relatorio-ia:hover { background: var(--secondary); transform: translateY(-2px); }
 
-        .btn-dl { background: var(--success); color: white; text-decoration: none; padding: 8px 12px; border-radius: 5px; font-size: 12px; font-weight: bold; }
-        .btn-none { background: #eee; color: #aaa; padding: 8px 12px; border-radius: 5px; font-size: 12px; cursor: not-allowed; }
-        
-        .btn-validar { cursor: pointer; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; transition: 0.3s; margin-right: 5px; }
-        .btn-validar:hover { opacity: 0.8; }
-        
-        .btn-checklist { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-right: 5px; }
-        .btn-checklist:hover { background: var(--secondary); transform: scale(1.05); }
-
-        .btn-relatorio-ia { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
-        .btn-relatorio-ia:hover { background: var(--accent); transform: translateY(-2px); }
-
-        /* VISÕES E MODAL */
+        /* VISÕES */
         .view-section { display: none; }
-        .view-section.active { display: block; animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .view-section.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .company-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer; transition: 0.3s; text-align: center; width: 250px; border: 2px solid transparent; }
-        .company-card:hover { border-color: var(--accent); transform: translateY(-5px); }
-        .company-card h3 { color: var(--primary); margin-bottom: 10px; }
+        /* Cards de Seleção */
+        .grid-empresas { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; }
+        .company-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; transition: 0.3s; border: 1px solid #e2e8f0; position: relative; }
+        .company-card:hover { border-color: #5a67d8; box-shadow: 0 10px 15px rgba(0,0,0,0.1); transform: translateY(-5px); }
+        .company-card h3 { color: var(--primary); margin: 0 0 10px 0; font-size: 18px; }
+        .status-badge-card { position: absolute; top: 20px; right: 20px; font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: bold; background: #e2e8f0; color: #4a5568; }
 
-        /* Estilos do Modal de Checklist */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
-        .modal-content { background-color: white; padding: 30px; border-radius: 12px; width: 60%; max-width: 700px; box-shadow: 0 5px 30px rgba(0,0,0,0.3); position: relative; max-height: 90vh; overflow-y: auto; }
-        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; font-weight: bold; cursor: pointer; color: #7f8c8d; }
-        .close-btn:hover { color: var(--danger); }
-        .pergunta-linha { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
-        .pergunta-linha p { margin: 0 0 10px 0; font-weight: bold; color: var(--secondary); }
+        /* Formulário Nova Auditoria */
+        .form-container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; max-width: 800px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: bold; color: var(--secondary); margin-bottom: 8px; font-size: 14px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; font-family: inherit; box-sizing: border-box; transition: 0.3s; }
+        .form-group input:focus, .form-group textarea:focus { border-color: #5a67d8; outline: none; box-shadow: 0 0 0 3px rgba(90, 103, 216, 0.2); }
+        .signature-box { border: 1px dashed #cbd5e0; height: 120px; border-radius: 8px; background: #f8fafc; margin-bottom: 10px; }
+
+        /* TABS (Domínios ISO) */
+        .tabs-container { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; overflow-x: auto; }
+        .tab-btn { background: #f1f5f9; border: 1px solid #cbd5e0; padding: 10px 20px; border-radius: 8px; color: #475569; font-weight: bold; cursor: pointer; transition: 0.3s; white-space: nowrap; }
+        .tab-btn:hover { background: #e2e8f0; }
+        .tab-btn.active { background: #5a67d8; color: white; border-color: #5a67d8; }
+
+        /* Cartões de Controlo ISO */
+        .dominio-content { display: none; }
+        .dominio-content.active { display: block; animation: fadeIn 0.3s; }
+        
+        .control-card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden; }
+        .control-header { background: #0f172a; color: white; padding: 12px 20px; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 10px; }
+        .control-body { padding: 25px; }
+        
+        .control-question { font-size: 15px; color: #334155; margin-bottom: 15px; font-weight: 500; }
+        
+        .toggle-group { display: flex; gap: 15px; margin-bottom: 20px; }
+        .toggle-btn { flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; background: white; cursor: pointer; font-weight: bold; color: #64748b; transition: 0.2s; text-align: center; }
+        .toggle-btn:hover { background: #f8fafc; }
+        .toggle-btn.sim.selected { background: var(--success); color: white; border-color: var(--success); }
+        .toggle-btn.nao.selected { background: var(--danger); color: white; border-color: var(--danger); }
+        .toggle-btn.na.selected { background: #94a3b8; color: white; border-color: #94a3b8; }
+
+        .obs-area { width: 100%; height: 80px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; font-family: inherit; resize: vertical; box-sizing: border-box; margin-bottom: 20px; background: #f8fafc; }
+        .obs-area:focus { outline: none; border-color: #5a67d8; background: white; }
+
+        .card-actions { display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px dashed #e2e8f0; }
+        .btn-anexar { color: #5a67d8; background: none; border: 1px dashed #5a67d8; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
+        .btn-anexar:hover { background: #ebf4ff; }
+        
+        .action-right-group { display: flex; gap: 10px; align-items: center; }
+        .btn-acao-corretiva { background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; display: none; transition: 0.2s; }
+        .btn-acao-corretiva:hover { background: #dc2626; }
+        .btn-guardar-cartao { background: #10b981; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-guardar-cartao:hover { background: #059669; }
+
+        /* Modal Plano de Ação */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.6); align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-content { background-color: white; padding: 0; border-radius: 12px; width: 90%; max-width: 550px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); overflow: hidden; animation: fadeIn 0.3s; }
+        .modal-header { padding: 20px 25px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { margin: 0; color: #0f172a; font-size: 18px; }
+        .close-btn { font-size: 24px; color: #94a3b8; cursor: pointer; border: none; background: none; }
+        .close-btn:hover { color: #ef4444; }
+        .modal-body { padding: 25px; }
+        .alert-falha { background: #fef2f2; border: 1px solid #fecaca; color: #ef4444; padding: 12px 15px; border-radius: 8px; font-size: 13px; font-weight: 500; margin-bottom: 20px; border-left: 4px solid #ef4444; }
+        .flex-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        .flex-row .form-group { flex: 1; margin-bottom: 0; }
+        .modal-footer { padding: 15px 25px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; }
+        .btn-cancelar { background: white; border: 1px solid #cbd5e0; color: #475569; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn-aplicar { background: #5a67d8; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
     </style>
 </head>
 <body>
     <aside class="sidebar">
         <div class="sidebar-header">🛡️ CyberGuard</div>
         <a href="dashboard.html" class="sidebar-item">📊 Dashboard</a>
-        <a href="controlos.html" class="sidebar-item active">📋 Auditoria Anexo A</a>
-        <a href="riscos.html" class="sidebar-item">🔥 Riscos Críticos</a>
+        <a href="controlos.html" class="sidebar-item active">📋 Auditorias ISO 27001</a>
+        <a href="riscos.html" class="sidebar-item">🔥 Gestão de Riscos</a>
         <a href="evidencias.html" class="sidebar-item">📁 Evidências</a>
         <a href="historico.html" class="sidebar-item">🕒 Histórico</a>
-        <a href="recursos.html" class="sidebar-item">📚 Recursos Educativos</a>
-        <a href="perfil.html" class="sidebar-item">👤 Perfil</a>
-        <a href="index.html" class="logout-item">🚪 Sair</a>
+        <a href="recursos.html" class="sidebar-item">📚 Biblioteca</a>
+        <a href="perfil.html" class="sidebar-item">👤 Meu Perfil</a>
+        <a href="index.html" class="logout-item">🚪 Terminar Sessão</a>
     </aside>
 
     <main class="main-content">
-        <div id="view-selecao" class="view-section active">
-            <h2>🏢 Selecione a Auditoria / Empresa</h2>
-            <p style="color: #7f8c8d; margin-bottom: 30px;">Escolha qual o cliente ou auditoria que deseja gerir neste momento.</p>
+        
+        <div id="view-lista" class="view-section active">
+            <div class="top-header">
+                <h2>Gestão de Auditorias</h2>
+                <button class="btn-nova-auditoria" onclick="abrirNovaAuditoria()">+ Nova Auditoria</button>
+            </div>
+            <p style="color: #64748b; margin-bottom: 20px;">Aceda às avaliações de conformidade ativas ou crie uma nova.</p>
             
-            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                <div class="company-card" onclick="abrirAuditoria('CyberGuard GRC', 1)">
-                    <div style="font-size: 40px; margin-bottom: 10px;">🛡️</div>
+            <div class="grid-empresas">
+                <div class="company-card" onclick="abrirChecklist('CyberGuard GRC')">
+                    <span class="status-badge-card" style="color:#047857; background:#d1fae5;">Ativa</span>
                     <h3>CyberGuard GRC</h3>
-                    <p style="color: #7f8c8d; font-size: 13px;">Auditoria Anual ISO 27001</p>
+                    <p style="color: #64748b; font-size: 13px; margin: 5px 0;">Auditoria Anual ISO 27001</p>
+                    <p style="color: #94a3b8; font-size: 12px; margin-top: 15px;">Última atualização: Hoje</p>
                 </div>
-
-                <div class="company-card" onclick="abrirAuditoria('TechCorp Solutions', 2)">
-                    <div style="font-size: 40px; margin-bottom: 10px;">💻</div>
+                <div class="company-card" onclick="abrirChecklist('TechCorp Solutions')">
+                    <span class="status-badge-card">Pendente</span>
                     <h3>TechCorp Solutions</h3>
-                    <p style="color: #7f8c8d; font-size: 13px;">Avaliação de Risco Q3</p>
-                </div>
-
-                <div class="company-card" onclick="abrirAuditoria('Nexus Health Group', 3)">
-                    <div style="font-size: 40px; margin-bottom: 10px;">🏥</div>
-                    <h3>Nexus Health Group</h3>
-                    <p style="color: #7f8c8d; font-size: 13px;">Conformidade Legal & Saúde</p>
+                    <p style="color: #64748b; font-size: 13px; margin: 5px 0;">Avaliação de Risco Q3</p>
+                    <p style="color: #94a3b8; font-size: 12px; margin-top: 15px;">Última atualização: 12 Mai 2026</p>
                 </div>
             </div>
         </div>
 
-        <div id="view-controlos" class="view-section">
+        <div id="view-nova" class="view-section">
+            <div class="top-header">
+                <h2>Informações Iniciais</h2>
+                <button class="btn-cancelar" onclick="voltarLista()">Cancelar</button>
+            </div>
             
-            <button onclick="voltarParaSelecao()" class="btn-validar" style="background: #95a5a6; color: white; margin-bottom: 20px;">⬅ Voltar às Auditorias</button>
-
-            <div id="alert-banner">
-                ⚠️ INTERVENÇÃO URGENTE: Existem <span id="crit-count">0</span> controlos de risco CRÍTICO que ainda estão NÃO CONFORMES.
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2>📋 Gestão de Conformidade: <span id="nome-empresa-titulo" style="color: var(--accent);"></span></h2>
-                <button id="btn-global-ia" class="btn-relatorio-ia" onclick="window.location.href='relatorio.html'">✨ Gerar Relatório Global IA</button>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Total de Controlos</h3>
-                    <p id="total-ctrl">0</p>
+            <div class="form-container">
+                <div class="form-group">
+                    <label>Nº do Documento</label>
+                    <input type="text" id="nova-doc" value="AUD-AUTO-2026" readonly style="background:#f8fafc; color:#94a3b8;">
                 </div>
-                <div class="stat-card" style="border-bottom-color: var(--danger);">
-                    <h3>Evidências em Falta</h3>
-                    <p id="total-evid" style="color: var(--danger);">0</p>
+                <div class="form-group">
+                    <label>Organização / Empresa a Auditar</label>
+                    <input type="text" id="nova-empresa" placeholder="Escreva o nome da organização...">
                 </div>
-                <div class="stat-card" style="border-bottom-color: var(--success);">
-                    <h3>Nível de Conformidade</h3>
-                    <p id="conf-rate">0%</p>
+                <div class="form-group">
+                    <label>Data da Auditoria</label>
+                    <input type="datetime-local" id="nova-data">
+                </div>
+                <div class="form-group">
+                    <label>Assinatura Digital do Auditor</label>
+                    <div class="signature-box"></div>
+                    <span style="color: #ef4444; font-size: 12px; cursor: pointer; font-weight: bold;">Limpar Assinatura</span>
+                </div>
+                
+                <div style="text-align: right; margin-top: 30px;">
+                    <button class="btn-nova-auditoria" style="display: inline-flex;" onclick="iniciarAuditoria()">Avançar para Checklist ➔</button>
                 </div>
             </div>
+        </div>
 
-            <div class="table-container">
-                <table id="tabela-controlos">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Controlo</th>
-                            <th>Nível de Risco</th>
-                            <th>Estado</th>
-                            <th>Evidência</th>
-                            <th>Ação Auditor</th>
-                        </tr>
-                    </thead>
-                    <tbody id="corpo"></tbody>
-                </table>
+        <div id="view-checklist" class="view-section">
+            <div class="top-header">
+                <div>
+                    <span style="font-size: 13px; color: #64748b; cursor:pointer; font-weight:bold;" onclick="voltarLista()">⬅ Voltar</span>
+                    <h2 style="margin: 5px 0 0 0;">Anexo A - <span id="nome-auditoria-ativa" style="color: #5a67d8;">Empresa</span></h2>
+                </div>
+                <button class="btn-relatorio-ia" onclick="window.location.href='relatorio.html'">✨ Gerar Relatório Global IA</button>
             </div>
+
+            <div class="tabs-container">
+                <button class="tab-btn active" onclick="mudarDominio('A5', this)">A.5 Organizacional</button>
+                <button class="tab-btn" onclick="mudarDominio('A6', this)">A.6 Pessoas</button>
+                <button class="tab-btn" onclick="mudarDominio('A7', this)">A.7 Físico</button>
+                <button class="tab-btn" onclick="mudarDominio('A8', this)">A.8 Tecnológico</button>
+            </div>
+
+            <div id="content-A5" class="dominio-content active"></div>
+            <div id="content-A6" class="dominio-content"></div>
+            <div id="content-A7" class="dominio-content"></div>
+            <div id="content-A8" class="dominio-content"></div>
+
         </div>
     </main>
 
-    <div id="modal-checklist" class="modal">
+    <div id="modal-acao" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="fecharModal()">&times;</span>
-            <h2 id="modal-titulo" style="color: var(--primary); margin-top: 0;">Avaliação do Controlo</h2>
-            <p id="modal-subtitulo" style="color: #7f8c8d; margin-bottom: 20px;"></p>
-
-            <form id="form-checklist">
-                <div class="pergunta-linha">
-                    <p>1. Existe uma Política de Segurança documentada e formalmente aprovada?</p>
-                    <label style="margin-right: 15px;"><input type="radio" name="p1" value="sim" required> Sim</label>
-                    <label><input type="radio" name="p1" value="nao"> Não</label>
+            <div class="modal-header">
+                <h3>Plano de Ação Imediato</h3>
+                <button class="close-btn" onclick="fecharModalAcao()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="alert-falha">
+                    <strong>Falha Detetada:</strong> O controlo <span id="modal-id-controlo"></span> não cumpre os requisitos mínimos estabelecidos pela norma ISO 27001.
                 </div>
-                <div class="pergunta-linha">
-                    <p>2. O controlo encontra-se implementado e os utilizadores foram consciencializados?</p>
-                    <label style="margin-right: 15px;"><input type="radio" name="p2" value="sim" required> Sim</label>
-                    <label><input type="radio" name="p2" value="nao"> Não</label>
+                
+                <div class="flex-row">
+                    <div class="form-group">
+                        <label>Responsável (Opcional)</label>
+                        <input type="text" id="acao-responsavel" placeholder="Ex: IT Manager">
+                    </div>
+                    <div class="form-group">
+                        <label>Prazo (Opcional)</label>
+                        <input type="date" id="acao-prazo">
+                    </div>
                 </div>
-                <div class="pergunta-linha">
-                    <p>3. Existe evidência técnica (ex: logs, relatórios, contratos) válida submetida no sistema?</p>
-                    <label style="margin-right: 15px;"><input type="radio" name="p3" value="sim" required> Sim</label>
-                    <label><input type="radio" name="p3" value="nao"> Não</label>
+                <div class="form-group">
+                    <label>Solução Recomendada</label>
+                    <textarea id="acao-solucao" style="height: 100px;" placeholder="O que deve ser feito para corrigir isto?"></textarea>
                 </div>
-                <div class="pergunta-linha">
-                    <p>4. O controlo foi revisto internamente nos últimos 12 meses?</p>
-                    <label style="margin-right: 15px;"><input type="radio" name="p4" value="sim" required> Sim</label>
-                    <label><input type="radio" name="p4" value="nao"> Não</label>
-                </div>
-                <div class="pergunta-linha">
-                    <p>5. O controlo é monitorizado ativamente contra ameaças ou vulnerabilidades recentes?</p>
-                    <label style="margin-right: 15px;"><input type="radio" name="p5" value="sim" required> Sim</label>
-                    <label><input type="radio" name="p5" value="nao"> Não</label>
-                </div>
-            </form>
-
-            <div style="text-align: right; margin-top: 20px;">
-                <button type="button" class="btn-validar" style="background: #95a5a6; color: white;" onclick="fecharModal()">Cancelar</button>
-                <button type="button" class="btn-validar" style="background: var(--accent); color: white;" onclick="salvarModal()">Salvar Avaliação</button>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancelar" onclick="fecharModalAcao()">Cancelar</button>
+                <button class="btn-aplicar" onclick="salvarAcaoCorretiva()">Aplicar à Auditoria</button>
             </div>
         </div>
     </div>
+
     <script src="config.js"></script>
     <script>
         const user = JSON.parse(localStorage.getItem('usuario')) || { nome: "Nuno Carvalho" };
-        let controloAtualEmEdicao = null; 
+        let controloEmAcao = null; // Guarda o ID do controlo que está a receber o plano de ação
 
-        // LÓGICA DAS VIEWS
-        function abrirAuditoria(nomeEmpresa, idEmpresa) {
-            document.getElementById('nome-empresa-titulo').innerText = nomeEmpresa;
-            document.getElementById('view-selecao').classList.remove('active');
-            document.getElementById('view-controlos').classList.add('active');
-            carregar();
+        // ==========================================
+        // GESTÃO DE VISÕES (NAVEGAÇÃO)
+        // ==========================================
+        function esconderTodasViews() {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         }
 
-        function voltarParaSelecao() {
-            document.getElementById('view-controlos').classList.remove('active');
-            document.getElementById('view-selecao').classList.add('active');
+        function voltarLista() {
+            esconderTodasViews();
+            document.getElementById('view-lista').classList.add('active');
         }
 
-        // LÓGICA DO MODAL DE CHECKLIST
-        function abrirModal(idControlo, nomeControlo) {
-            controloAtualEmEdicao = idControlo;
-            document.getElementById('modal-titulo').innerText = `Controlo ${idControlo}`;
-            document.getElementById('modal-subtitulo').innerText = nomeControlo;
-            document.getElementById('form-checklist').reset();
-            document.getElementById('modal-checklist').style.display = 'flex';
+        function abrirNovaAuditoria() {
+            esconderTodasViews();
+            document.getElementById('nova-data').value = new Date().toISOString().slice(0, 16);
+            document.getElementById('view-nova').classList.add('active');
         }
 
-        function fecharModal() {
-            document.getElementById('modal-checklist').style.display = 'none';
+        function iniciarAuditoria() {
+            const empresa = document.getElementById('nova-empresa').value;
+            if(!empresa) { alert("Por favor, introduza o nome da Organização a auditar."); return; }
+            abrirChecklist(empresa);
         }
 
-        async function salvarModal() {
-            const p1 = document.querySelector('input[name="p1"]:checked');
-            const p2 = document.querySelector('input[name="p2"]:checked');
-            const p3 = document.querySelector('input[name="p3"]:checked');
-            const p4 = document.querySelector('input[name="p4"]:checked');
-            const p5 = document.querySelector('input[name="p5"]:checked');
+        function abrirChecklist(nomeEmpresa) {
+            document.getElementById('nome-auditoria-ativa').innerText = nomeEmpresa;
+            esconderTodasViews();
+            document.getElementById('view-checklist').classList.add('active');
+            carregarControlosDaBD(); // Carrega da BD e desenha os cartões
+        }
 
-            if (!p1 || !p2 || !p3 || !p4 || !p5) {
-                alert("Para garantir o rigor da ISO 27001, por favor responda a todas as 5 perguntas.");
-                return;
-            }
+        // ==========================================
+        // GESTÃO DE TABS (DOMÍNIOS)
+        // ==========================================
+        function mudarDominio(idDominio, btnElement) {
+            // Atualiza botões
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            
+            // Atualiza painéis
+            document.querySelectorAll('.dominio-content').forEach(panel => panel.classList.remove('active'));
+            document.getElementById('content-' + idDominio).classList.add('active');
+        }
 
-            // MÁGICA: Tem de responder "Sim" a tudo para estar Conforme (1).
-            const valorFinal = (p1.value === 'sim' && p2.value === 'sim' && p3.value === 'sim' && p4.value === 'sim' && p5.value === 'sim') ? 1 : 0;
-
+        // ==========================================
+        // LÓGICA DE DADOS E RENDERIZAÇÃO DOS CARTÕES
+        // ==========================================
+        async function carregarControlosDaBD() {
             try {
-                await fetch(API_URL + '/api/atualizar-checklist', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id_controlo: controloAtualEmEdicao, conforme: valorFinal })
-                });
+                // Vai buscar os dados ao teu servidor Aiven
+                const resp = await fetch(API_URL + '/api/controlos');
+                const controlos = await resp.json();
 
-                if(valorFinal === 1) {
-                    alert(`✅ Excelência! O Controlo ${controloAtualEmEdicao} cumpre todos os 5 requisitos da norma.`);
-                } else {
-                    alert(`⚠️ Atenção: O Controlo ${controloAtualEmEdicao} não cumpre todos os requisitos e ficará assinalado como Não Conforme.`);
-                }
-
-                fecharModal();
-                await carregar(); 
-
-            } catch (err) {
-                console.error("Erro ao salvar checklist:", err);
-                alert("Ocorreu um erro ao comunicar com o servidor.");
-            }
-        }
-
-        // CARREGAR DADOS NA TABELA
-        async function carregar() {
-            try {
-                const [respC, respE] = await Promise.all([
-                    fetch(API_URL + '/api/controlos'),
-                    fetch(API_URL + '/api/evidencias')
-                ]);
-                const controlos = await respC.json();
-                const evidencias = await respE.json();
-                
-                let criticosPendentes = 0;
-                let conformes = 0;
-                let evidenciasEmFalta = 0; 
-
-                const tbody = document.getElementById('corpo');
-                tbody.innerHTML = '';
+                // Limpa os contentores
+                document.getElementById('content-A5').innerHTML = '';
+                document.getElementById('content-A6').innerHTML = '';
+                document.getElementById('content-A7').innerHTML = '';
+                document.getElementById('content-A8').innerHTML = '';
 
                 controlos.forEach(c => {
-                    const nivelRisco = c.risco || 'BAIXO';
-                    const corEstado = c.estado === 'CONFORME' ? 'var(--success)' : 'var(--danger)';
-                    const evid = evidencias.find(e => e.id_controlo === c.id_controlo);
+                    let prefixo = '';
+                    if(c.id_controlo.startsWith('A.5')) prefixo = 'A5';
+                    else if(c.id_controlo.startsWith('A.6')) prefixo = 'A6';
+                    else if(c.id_controlo.startsWith('A.7')) prefixo = 'A7';
+                    else if(c.id_controlo.startsWith('A.8')) prefixo = 'A8';
+                    else prefixo = 'A5'; // Fallback
+
+                    // Lógica para pre-selecionar botões baseado na BD
+                    const isSim = c.estado === 'CONFORME' ? 'selected' : '';
+                    const isNao = c.estado === 'NÃO CONFORME' || (c.estado === 'PENDENTE' && c.risco==='CRÍTICO') ? 'selected' : '';
                     
-                    if (c.estado === 'CONFORME') conformes++;
+                    // Se estiver NÃO CONFORME, o botão de ação corretiva deve estar visível
+                    const displayAcaoBtn = isNao === 'selected' ? 'block' : 'none';
+
+                    // Desenha o cartão de acordo com o design do colega
+                    const cartaoHTML = `
+                        <div class="control-card" id="card-${c.id_controlo}">
+                            <div class="control-header">
+                                📖 ${c.id_controlo} - ${c.nome_controlo}
+                            </div>
+                            <div class="control-body">
+                                <div class="control-question">Este controlo de segurança encontra-se implementado e gerido adequadamente na organização?</div>
+                                
+                                <div class="toggle-group">
+                                    <div class="toggle-btn sim ${isSim}" onclick="selecionarToggle('${c.id_controlo}', 'sim')">SIM</div>
+                                    <div class="toggle-btn nao ${isNao}" onclick="selecionarToggle('${c.id_controlo}', 'nao')">NÃO</div>
+                                    <div class="toggle-btn na" onclick="selecionarToggle('${c.id_controlo}', 'na')">NA</div>
+                                </div>
+
+                                <textarea class="obs-area" id="obs-${c.id_controlo}" placeholder="Adicione uma nota, justificação ou observação de auditoria..."></textarea>
+                                
+                                <div class="card-actions">
+                                    <button class="btn-anexar">📎 Anexar Evidência</button>
+                                    <div class="action-right-group">
+                                        <button class="btn-acao-corretiva" id="btn-acao-${c.id_controlo}" style="display: ${displayAcaoBtn};" onclick="abrirModalAcao('${c.id_controlo}')">🚨 Criar Ação Corretiva</button>
+                                        <button class="btn-guardar-cartao" onclick="guardarAvaliacao('${c.id_controlo}')">Guardar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                     
-                    // LÓGICA DE EVIDÊNCIAS EM FALTA: Conta apenas se NÃO tem ficheiro E se o estado ainda NÃO está aprovado (Conforme)
-                    if (!evid && c.estado !== 'CONFORME') evidenciasEmFalta++;
-                    
-                    if (nivelRisco === 'CRÍTICO' && c.estado !== 'CONFORME') criticosPendentes++;
-
-                    let linkDl = evid 
-                        ? `<a href="visualizar.html?file=http://localhost:5000/${evid.caminho.replace(/\\/g, '/')}" class="btn-dl" target="_blank">👁️ Ver Documento</a>`
-                        : `<span class="btn-none">Falta Evidência</span>`;
-
-                    let btnCheck = `<button class="btn-checklist" onclick="abrirModal('${c.id_controlo}', '${c.nome_controlo}')">📝 Avaliar</button>`;
-
-                    let acaoBtn = c.estado !== 'CONFORME'
-                        ? `${btnCheck} <button class="btn-validar" style="background:var(--success); color:white;" onclick="validar('${c.id_controlo}', 'CONFORME')">✅ Aprovar</button>`
-                        : `${btnCheck} <button class="btn-validar" style="background:var(--danger); color:white;" onclick="validar('${c.id_controlo}', 'PENDENTE')">❌ Reabrir</button>`;
-
-                    // DESTAQUE DA LINHA SE FALTAR EVIDÊNCIA (Mas a linha vermelha desaparece caso já esteja APROVADO)
-                    let linhaStyle = (!evid && c.estado !== 'CONFORME') ? 'border-left: 4px solid var(--danger); background-color: #fffafb;' : '';
-
-                    tbody.innerHTML += `
-                        <tr style="${linhaStyle}">
-                            <td><strong>${c.id_controlo}</strong></td>
-                            <td>${c.nome_controlo}</td>
-                            <td><span class="risco-badge risco-${nivelRisco}">⚠️ ${nivelRisco}</span></td>
-                            <td><span class="status-badge" style="background:${corEstado}">${c.estado}</span></td>
-                            <td>${linkDl}</td>
-                            <td><div style="display:flex;">${acaoBtn}</div></td>
-                        </tr>`;
+                    document.getElementById('content-' + prefixo).innerHTML += cartaoHTML;
                 });
 
-                document.getElementById('total-ctrl').innerText = controlos.length;
-                document.getElementById('total-evid').innerText = evidenciasEmFalta; 
-                
-                const percentagem = Math.round((conformes / controlos.length) * 100) || 0;
-                document.getElementById('conf-rate').innerText = percentagem + "%";
-
-                if (criticosPendentes > 0) {
-                    document.getElementById('alert-banner').style.display = 'block';
-                    document.getElementById('crit-count').innerText = criticosPendentes;
-                } else {
-                    document.getElementById('alert-banner').style.display = 'none';
-                }
-
             } catch (err) {
-                console.error("Erro ao carregar dados:", err);
+                console.error("Erro ao desenhar controlos:", err);
             }
         }
 
-        async function validar(id, novoEstado) {
+        // ==========================================
+        // LÓGICA DE INTERAÇÃO DOS CARTÕES
+        // ==========================================
+        function selecionarToggle(idControlo, valor) {
+            // Remove a seleção atual deste cartão específico
+            const cartao = document.getElementById('card-' + idControlo);
+            cartao.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('selected'));
+            
+            // Adiciona a seleção no botão clicado
+            cartao.querySelector('.toggle-btn.' + valor).classList.add('selected');
+
+            // Magia: Mostrar o botão vermelho de Ação Corretiva apenas se for NÃO
+            const btnAcao = document.getElementById('btn-acao-' + idControlo);
+            if(valor === 'nao') {
+                btnAcao.style.display = 'block';
+            } else {
+                btnAcao.style.display = 'none';
+            }
+        }
+
+        async function guardarAvaliacao(idControlo) {
+            const cartao = document.getElementById(`card-${idControlo}`);
+            const btnSim = cartao.querySelector('.toggle-btn.sim').classList.contains('selected');
+            const btnNao = cartao.querySelector('.toggle-btn.nao').classList.contains('selected');
+            
+            // Determina o estado a enviar para o teu servidor
+            let novoEstado = 'PENDENTE';
+            if (btnSim) novoEstado = 'CONFORME';
+            if (btnNao) novoEstado = 'NÃO CONFORME';
+
             try {
+                // Comunica com o teu servidor exato (que já tens configurado no Node.js)
                 const resp = await fetch(API_URL + '/api/update-status', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: id, novo_estado: novoEstado, auditor: user.nome })
+                    body: JSON.stringify({ id: idControlo, novo_estado: novoEstado, auditor: user.nome })
                 });
-                if((await resp.json()).success) {
-                    await carregar(); 
+
+                if(resp.ok) {
+                    alert(`✅ Avaliação do controlo ${idControlo} guardada com sucesso!`);
+                } else {
+                    alert("⚠️ Ocorreu um erro ao guardar na base de dados.");
                 }
             } catch (err) {
-                console.error("Erro ao validar:", err);
+                console.error("Erro ao guardar:", err);
             }
         }
+
+        // ==========================================
+        // LÓGICA DO MODAL PLANO DE AÇÃO CORRETIVA
+        // ==========================================
+        function abrirModalAcao(idControlo) {
+            controloEmAcao = idControlo;
+            document.getElementById('modal-id-controlo').innerText = idControlo;
+            document.getElementById('acao-responsavel').value = '';
+            document.getElementById('acao-solucao').value = '';
+            document.getElementById('modal-acao').style.display = 'flex';
+        }
+
+        function fecharModalAcao() {
+            document.getElementById('modal-acao').style.display = 'none';
+        }
+
+        async function salvarAcaoCorretiva() {
+            const solucao = document.getElementById('acao-solucao').value;
+            const responsavel = document.getElementById('acao-responsavel').value;
+            
+            if(!solucao) {
+                alert("Por favor, descreva a solução recomendada.");
+                return;
+            }
+
+            try {
+                // Usa a tua rota existente para mitigar riscos
+                await fetch(API_URL + '/api/mitigar-risco', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        id_controlo: controloEmAcao, 
+                        plano_acao: `Responsável: ${responsavel || 'Não atribuído'}\nAção: ${solucao}`, 
+                        auditor: user.nome 
+                    })
+                });
+
+                alert(`🎯 Plano de Ação para o controlo ${controloEmAcao} submetido com sucesso!`);
+                fecharModalAcao();
+                
+            } catch (err) {
+                console.error("Erro ao guardar plano de ação:", err);
+            }
+        }
+
+        // Inicia carregando a lista inicial
+        window.onload = () => {
+            // Se for preciso, inicializar algo.
+        };
     </script>
 </body>
 </html>
