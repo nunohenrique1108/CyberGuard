@@ -2,442 +2,476 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>CyberGuard | Auditoria e Validação</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <title>CyberGuard | Auditoria ISO 27001</title>
     
     <style>
-        :root { --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --success: #27ae60; --warning: #f39c12; --danger: #e74c3c; --light: #f4f7f6; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: var(--light); display: flex; min-height: 100vh; }
+        :root { --primary: #1e293b; --secondary: #334155; --accent: #6366f1; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --light: #f8fafc; --border: #e2e8f0; }
+        body { font-family: 'Inter', 'Segoe UI', sans-serif; margin: 0; background-color: var(--light); display: flex; min-height: 100vh; overflow-x: hidden; }
         
-        /* Sidebar Uniformizada */
-        .sidebar { width: 260px; background: var(--secondary); color: white; display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 100; }
-        .sidebar-header { padding: 25px; font-size: 22px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; color: #ecf0f1; }
-        .sidebar-item { padding: 15px 25px; cursor: pointer; transition: 0.3s; text-decoration: none; color: white; display: block; border-left: 4px solid transparent; }
-        .sidebar-item:hover { background: rgba(255,255,255,0.1); border-left-color: var(--accent); }
-        .active { background: rgba(255,255,255,0.2); border-left-color: var(--accent); }
-        .logout-item { margin-top: auto; background: #2c3e50; color: #e74c3c; border-top: 1px solid rgba(255,255,255,0.05); padding: 20px 25px; text-decoration: none; display: block; font-weight: bold; transition: 0.3s; }
-        .logout-item:hover { background: rgba(231, 76, 60, 0.1); }
+        /* Sidebar Principal */
+        .sidebar { width: 260px; background: var(--primary); color: white; display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 50; }
+        .sidebar-header { padding: 25px; font-size: 20px; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; letter-spacing: 1px; color: #f8fafc; }
+        .sidebar-item { padding: 16px 25px; cursor: pointer; transition: 0.2s; text-decoration: none; color: #cbd5e1; display: flex; align-items: center; gap: 10px; border-left: 4px solid transparent; font-size: 14px;}
+        .sidebar-item:hover { background: rgba(255,255,255,0.05); color: white; }
+        .active { background: rgba(99, 102, 241, 0.1); border-left-color: var(--accent); color: white; font-weight: 600; }
+        .logout-item { margin-top: auto; background: #0f172a; color: #f87171; padding: 20px 25px; text-decoration: none; display: block; font-weight: 600; font-size: 14px; transition: 0.3s; }
 
-        .main-content { flex: 1; margin-left: 260px; padding: 40px; }
+        .main-content { flex: 1; margin-left: 260px; padding: 40px; box-sizing: border-box; max-width: calc(100% - 260px); }
         
-        /* Top Bar Utilities */
-        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
-        .btn-nova-auditoria { background: #5a67d8; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
-        .btn-nova-auditoria:hover { background: #4c51bf; transform: translateY(-2px); }
+        /* Top Header */
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .page-header h2 { margin: 0; color: var(--primary); font-size: 24px; font-weight: 700; }
         
-        .btn-relatorio-ia { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; transition: 0.3s; text-decoration: none;}
-        .btn-relatorio-ia:hover { background: var(--secondary); transform: translateY(-2px); }
-
-        /* VISÕES */
-        .view-section { display: none; }
-        .view-section.active { display: block; animation: fadeIn 0.4s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Cards de Seleção */
-        .grid-empresas { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; }
-        .company-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; transition: 0.3s; border: 1px solid #e2e8f0; position: relative; }
-        .company-card:hover { border-color: #5a67d8; box-shadow: 0 10px 15px rgba(0,0,0,0.1); transform: translateY(-5px); }
-        .company-card h3 { color: var(--primary); margin: 0 0 10px 0; font-size: 18px; }
-        .status-badge-card { position: absolute; top: 20px; right: 20px; font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: bold; background: #e2e8f0; color: #4a5568; }
-
-        /* Formulário Nova Auditoria */
-        .form-container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; max-width: 800px; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-weight: bold; color: var(--secondary); margin-bottom: 8px; font-size: 14px; }
-        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; font-family: inherit; box-sizing: border-box; transition: 0.3s; }
-        .form-group input:focus, .form-group textarea:focus { border-color: #5a67d8; outline: none; box-shadow: 0 0 0 3px rgba(90, 103, 216, 0.2); }
-        .signature-box { border: 1px dashed #cbd5e0; height: 120px; border-radius: 8px; background: #f8fafc; margin-bottom: 10px; }
-
-        /* TABS (Domínios ISO) */
-        .tabs-container { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; overflow-x: auto; }
-        .tab-btn { background: #f1f5f9; border: 1px solid #cbd5e0; padding: 10px 20px; border-radius: 8px; color: #475569; font-weight: bold; cursor: pointer; transition: 0.3s; white-space: nowrap; }
-        .tab-btn:hover { background: #e2e8f0; }
-        .tab-btn.active { background: #5a67d8; color: white; border-color: #5a67d8; }
-
-        /* Cartões de Controlo ISO */
-        .dominio-content { display: none; }
-        .dominio-content.active { display: block; animation: fadeIn 0.3s; }
+        .btn-primario { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
+        .btn-primario:hover { background: #4f46e5; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2); }
         
-        .control-card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden; }
-        .control-header { background: #0f172a; color: white; padding: 12px 20px; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 10px; }
-        .control-body { padding: 25px; }
-        
-        .control-question { font-size: 15px; color: #334155; margin-bottom: 15px; font-weight: 500; }
-        
-        .toggle-group { display: flex; gap: 15px; margin-bottom: 20px; }
-        .toggle-btn { flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; background: white; cursor: pointer; font-weight: bold; color: #64748b; transition: 0.2s; text-align: center; }
-        .toggle-btn:hover { background: #f8fafc; }
-        .toggle-btn.sim.selected { background: var(--success); color: white; border-color: var(--success); }
-        .toggle-btn.nao.selected { background: var(--danger); color: white; border-color: var(--danger); }
-        .toggle-btn.na.selected { background: #94a3b8; color: white; border-color: #94a3b8; }
+        .btn-ia { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
+        .btn-ia:hover { background: #0f172a; }
 
-        .obs-area { width: 100%; height: 80px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; font-family: inherit; resize: vertical; box-sizing: border-box; margin-bottom: 20px; background: #f8fafc; }
-        .obs-area:focus { outline: none; border-color: #5a67d8; background: white; }
+        /* Vistas */
+        .view-section { display: none; animation: slideUp 0.4s ease; }
+        .view-section.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        .card-actions { display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px dashed #e2e8f0; }
-        .btn-anexar { color: #5a67d8; background: none; border: 1px dashed #5a67d8; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
-        .btn-anexar:hover { background: #ebf4ff; }
+        /* View 1: Tabela de Auditorias (Design Diferente dos Cartões) */
+        .audit-list-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .audit-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .audit-table th { background: #f1f5f9; padding: 15px 20px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+        .audit-table td { padding: 18px 20px; border-bottom: 1px solid var(--border); color: var(--secondary); font-size: 14px; vertical-align: middle; }
+        .audit-table tr:hover { background: #f8fafc; cursor: pointer; }
+        .badge-status { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .badge-active { background: #dcfce7; color: #166534; }
+        .badge-pending { background: #fef9c3; color: #854d0e; }
+
+        /* View 2: Nova Auditoria com Canvas */
+        .form-box { background: white; padding: 30px; border-radius: 12px; border: 1px solid var(--border); max-width: 600px; }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; font-weight: 600; color: var(--secondary); margin-bottom: 8px; font-size: 13px; }
+        .input-group input { width: 100%; padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 14px; box-sizing: border-box; transition: 0.2s; }
+        .input-group input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
         
-        .action-right-group { display: flex; gap: 10px; align-items: center; }
-        .btn-acao-corretiva { background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; display: none; transition: 0.2s; }
-        .btn-acao-corretiva:hover { background: #dc2626; }
-        .btn-guardar-cartao { background: #10b981; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-guardar-cartao:hover { background: #059669; }
+        .canvas-container { border: 2px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; position: relative; margin-bottom: 5px; }
+        canvas { display: block; width: 100%; height: 150px; cursor: crosshair; }
+        .btn-limpar-canvas { font-size: 12px; color: var(--danger); cursor: pointer; font-weight: 600; background: none; border: none; padding: 0; }
 
-        /* Modal Plano de Ação */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.6); align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-        .modal-content { background-color: white; padding: 0; border-radius: 12px; width: 90%; max-width: 550px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); overflow: hidden; animation: fadeIn 0.3s; }
-        .modal-header { padding: 20px 25px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h3 { margin: 0; color: #0f172a; font-size: 18px; }
-        .close-btn { font-size: 24px; color: #94a3b8; cursor: pointer; border: none; background: none; }
-        .close-btn:hover { color: #ef4444; }
-        .modal-body { padding: 25px; }
-        .alert-falha { background: #fef2f2; border: 1px solid #fecaca; color: #ef4444; padding: 12px 15px; border-radius: 8px; font-size: 13px; font-weight: 500; margin-bottom: 20px; border-left: 4px solid #ef4444; }
-        .flex-row { display: flex; gap: 15px; margin-bottom: 15px; }
-        .flex-row .form-group { flex: 1; margin-bottom: 0; }
-        .modal-footer { padding: 15px 25px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; }
-        .btn-cancelar { background: white; border: 1px solid #cbd5e0; color: #475569; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-        .btn-aplicar { background: #5a67d8; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        /* View 3: Layout Split (Menu Vertical + Acordeões) */
+        .workspace { display: flex; gap: 30px; align-items: flex-start; }
+        
+        /* Menu Lateral Interno (Domínios) */
+        .domain-menu { width: 220px; background: white; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; position: sticky; top: 20px; flex-shrink: 0; }
+        .domain-btn { display: block; width: 100%; text-align: left; background: none; border: none; padding: 15px 20px; font-size: 14px; font-weight: 600; color: #64748b; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
+        .domain-btn:hover { background: #f1f5f9; color: var(--primary); }
+        .domain-btn.active { background: #eef2ff; color: var(--accent); border-left: 3px solid var(--accent); }
+
+        /* Área dos Controlos (Acordeão) */
+        .controls-area { flex: 1; }
+        .domain-panel { display: none; }
+        .domain-panel.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .accordion-item { background: white; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .accordion-header { padding: 15px 20px; background: white; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; transition: 0.2s; }
+        .accordion-header:hover { background: #f8fafc; }
+        .control-title { font-weight: 600; color: var(--primary); font-size: 14px; display: flex; align-items: center; gap: 10px; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .dot-conforme { background: var(--success); }
+        .dot-nao-conforme { background: var(--danger); }
+        .dot-pendente { background: var(--warning); }
+        
+        .accordion-body { padding: 0 20px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out, padding 0.3s ease; background: #fafafa; border-top: 1px solid transparent; }
+        .accordion-item.open .accordion-body { max-height: 500px; padding: 20px; border-top-color: var(--border); }
+        
+        /* Elementos dentro do Acordeão */
+        .eval-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+        .radio-pills { display: flex; gap: 10px; background: #e2e8f0; padding: 5px; border-radius: 8px; width: fit-content; }
+        .radio-pills label { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; color: #64748b; transition: 0.2s; }
+        .radio-pills input[type="radio"] { display: none; }
+        .radio-pills input[type="radio"]:checked + label.lbl-sim { background: var(--success); color: white; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2); }
+        .radio-pills input[type="radio"]:checked + label.lbl-nao { background: var(--danger); color: white; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2); }
+        
+        .input-nota { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; font-family: inherit; resize: vertical; height: 60px; box-sizing: border-box; }
+        
+        .action-bar { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px dashed #cbd5e1; }
+        
+        .btn-upload { background: white; color: var(--secondary); border: 1px solid #cbd5e1; padding: 8px 15px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-upload:hover { border-color: var(--accent); color: var(--accent); }
+        
+        .btn-mitigacao { background: #fff1f2; color: var(--danger); border: 1px solid #fecaca; padding: 8px 15px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: none; transition: 0.2s;}
+        .btn-mitigacao:hover { background: var(--danger); color: white; }
+        
+        .btn-save-inline { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+        /* PAINEL LATERAL (SLIDE-IN DRAWER) PARA MITIGAÇÃO */
+        .drawer-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); z-index: 999; backdrop-filter: blur(2px); opacity: 0; transition: opacity 0.3s; }
+        .drawer-overlay.open { display: block; opacity: 1; }
+        
+        .side-drawer { position: fixed; top: 0; right: -450px; width: 400px; height: 100vh; background: white; z-index: 1000; box-shadow: -5px 0 25px rgba(0,0,0,0.1); transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; }
+        .side-drawer.open { right: 0; }
+        
+        .drawer-header { padding: 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
+        .drawer-header h3 { margin: 0; color: var(--danger); font-size: 18px; }
+        .drawer-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #94a3b8; }
+        .drawer-body { padding: 25px; flex: 1; overflow-y: auto; }
+        .drawer-footer { padding: 20px 25px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: #f8fafc; }
+
     </style>
 </head>
 <body>
     <aside class="sidebar">
         <div class="sidebar-header">🛡️ CyberGuard</div>
-        <a href="dashboard.html" class="sidebar-item">📊 Dashboard</a>
-        <a href="controlos.html" class="sidebar-item active">📋 Auditorias ISO 27001</a>
+        <a href="dashboard.html" class="sidebar-item">📊 Resumo Executivo</a>
+        <a href="controlos.html" class="sidebar-item active">📋 Painel de Auditoria</a>
         <a href="riscos.html" class="sidebar-item">🔥 Gestão de Riscos</a>
-        <a href="evidencias.html" class="sidebar-item">📁 Evidências</a>
-        <a href="historico.html" class="sidebar-item">🕒 Histórico</a>
-        <a href="recursos.html" class="sidebar-item">📚 Biblioteca</a>
-        <a href="perfil.html" class="sidebar-item">👤 Meu Perfil</a>
-        <a href="index.html" class="logout-item">🚪 Terminar Sessão</a>
+        <a href="evidencias.html" class="sidebar-item">📁 Repositório Digital</a>
+        <a href="historico.html" class="sidebar-item">🕒 Registos & Logs</a>
+        <a href="perfil.html" class="sidebar-item">👤 Configurações</a>
+        <a href="index.html" class="logout-item">🚪 Fechar Sessão</a>
     </aside>
 
     <main class="main-content">
         
         <div id="view-lista" class="view-section active">
-            <div class="top-header">
-                <h2>Gestão de Auditorias</h2>
-                <button class="btn-nova-auditoria" onclick="abrirNovaAuditoria()">+ Nova Auditoria</button>
+            <div class="page-header">
+                <div>
+                    <h2>Auditorias em Curso</h2>
+                    <p style="color: #64748b; margin-top: 5px; font-size: 14px;">Monitorize ou inicie avaliações de conformidade ISO 27001.</p>
+                </div>
+                <button class="btn-primario" onclick="abrirNovaAuditoria()">+ Criar Nova Auditoria</button>
             </div>
-            <p style="color: #64748b; margin-bottom: 20px;">Aceda às avaliações de conformidade ativas ou crie uma nova.</p>
             
-            <div class="grid-empresas">
-                <div class="company-card" onclick="abrirChecklist('CyberGuard GRC')">
-                    <span class="status-badge-card" style="color:#047857; background:#d1fae5;">Ativa</span>
-                    <h3>CyberGuard GRC</h3>
-                    <p style="color: #64748b; font-size: 13px; margin: 5px 0;">Auditoria Anual ISO 27001</p>
-                    <p style="color: #94a3b8; font-size: 12px; margin-top: 15px;">Última atualização: Hoje</p>
-                </div>
-                <div class="company-card" onclick="abrirChecklist('TechCorp Solutions')">
-                    <span class="status-badge-card">Pendente</span>
-                    <h3>TechCorp Solutions</h3>
-                    <p style="color: #64748b; font-size: 13px; margin: 5px 0;">Avaliação de Risco Q3</p>
-                    <p style="color: #94a3b8; font-size: 12px; margin-top: 15px;">Última atualização: 12 Mai 2026</p>
-                </div>
+            <div class="audit-list-container">
+                <table class="audit-table">
+                    <thead>
+                        <tr>
+                            <th>Ref. Documento</th>
+                            <th>Organização Auditada</th>
+                            <th>Data de Início</th>
+                            <th>Estado Atual</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr onclick="abrirWorkspace('CyberGuard GRC')">
+                            <td><strong>AUD-2026-001</strong></td>
+                            <td>CyberGuard GRC (Interna)</td>
+                            <td>12 Mai 2026</td>
+                            <td><span class="badge-status badge-active">Em Execução</span></td>
+                            <td style="color: var(--accent); font-weight: 600;">Retomar ➔</td>
+                        </tr>
+                        <tr onclick="abrirWorkspace('TechCorp Solutions')">
+                            <td><strong>AUD-2026-002</strong></td>
+                            <td>TechCorp Solutions</td>
+                            <td>18 Mai 2026</td>
+                            <td><span class="badge-status badge-pending">Pendente</span></td>
+                            <td style="color: var(--accent); font-weight: 600;">Iniciar ➔</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
         <div id="view-nova" class="view-section">
-            <div class="top-header">
-                <h2>Informações Iniciais</h2>
-                <button class="btn-cancelar" onclick="voltarLista()">Cancelar</button>
+            <div class="page-header">
+                <h2>Iniciar Novo Processo</h2>
+                <button class="btn-upload" onclick="voltarLista()">Cancelar</button>
             </div>
             
-            <div class="form-container">
-                <div class="form-group">
-                    <label>Nº do Documento</label>
-                    <input type="text" id="nova-doc" value="AUD-AUTO-2026" readonly style="background:#f8fafc; color:#94a3b8;">
+            <div class="form-box">
+                <div class="input-group">
+                    <label>Referência da Auditoria</label>
+                    <input type="text" id="nova-ref" value="AUD-2026-AUTO" readonly style="background:#f1f5f9; color:#94a3b8;">
                 </div>
-                <div class="form-group">
-                    <label>Organização / Empresa a Auditar</label>
-                    <input type="text" id="nova-empresa" placeholder="Escreva o nome da organização...">
+                <div class="input-group">
+                    <label>Entidade Alvo</label>
+                    <input type="text" id="nova-empresa" placeholder="Nome da empresa ou departamento...">
                 </div>
-                <div class="form-group">
-                    <label>Data da Auditoria</label>
-                    <input type="datetime-local" id="nova-data">
+                <div class="input-group">
+                    <label>Assinatura Digital do Auditor Chefe</label>
+                    <div class="canvas-container">
+                        <canvas id="signature-pad"></canvas>
+                    </div>
+                    <button class="btn-limpar-canvas" onclick="limparAssinatura()">Limpar quadro</button>
                 </div>
-                <div class="form-group">
-                    <label>Assinatura Digital do Auditor</label>
-                    <div class="signature-box"></div>
-                    <span style="color: #ef4444; font-size: 12px; cursor: pointer; font-weight: bold;">Limpar Assinatura</span>
-                </div>
-                
-                <div style="text-align: right; margin-top: 30px;">
-                    <button class="btn-nova-auditoria" style="display: inline-flex;" onclick="iniciarAuditoria()">Avançar para Checklist ➔</button>
+                <div style="margin-top: 30px;">
+                    <button class="btn-primario" style="width: 100%; justify-content: center;" onclick="concluirCriacao()">Autenticar e Iniciar</button>
                 </div>
             </div>
         </div>
 
-        <div id="view-checklist" class="view-section">
-            <div class="top-header">
+        <div id="view-workspace" class="view-section">
+            <div class="page-header" style="border-bottom: 1px solid var(--border); padding-bottom: 20px;">
                 <div>
-                    <span style="font-size: 13px; color: #64748b; cursor:pointer; font-weight:bold;" onclick="voltarLista()">⬅ Voltar</span>
-                    <h2 style="margin: 5px 0 0 0;">Anexo A - <span id="nome-auditoria-ativa" style="color: #5a67d8;">Empresa</span></h2>
+                    <span style="font-size: 12px; color: #64748b; cursor:pointer; font-weight:bold; text-transform: uppercase;" onclick="voltarLista()">⬅ Voltar ao Painel</span>
+                    <h2 style="margin: 5px 0 0 0;" id="ws-empresa-nome">Empresa XYZ</h2>
                 </div>
-                <button class="btn-relatorio-ia" onclick="window.location.href='relatorio.html'">✨ Gerar Relatório Global IA</button>
+                <a href="relatorio.html" class="btn-ia">✨ Gerar Relatório Global IA</a>
             </div>
 
-            <div class="tabs-container">
-                <button class="tab-btn active" onclick="mudarDominio('A5', this)">A.5 Organizacional</button>
-                <button class="tab-btn" onclick="mudarDominio('A6', this)">A.6 Pessoas</button>
-                <button class="tab-btn" onclick="mudarDominio('A7', this)">A.7 Físico</button>
-                <button class="tab-btn" onclick="mudarDominio('A8', this)">A.8 Tecnológico</button>
+            <div class="workspace">
+                <div class="domain-menu">
+                    <button class="domain-btn active" onclick="mudarPainel('A5', this)">A.5 - Políticas de Segurança</button>
+                    <button class="domain-btn" onclick="mudarPainel('A6', this)">A.6 - Recursos Humanos</button>
+                    <button class="domain-btn" onclick="mudarPainel('A7', this)">A.7 - Segurança Física</button>
+                    <button class="domain-btn" onclick="mudarPainel('A8', this)">A.8 - Controlos Técnicos</button>
+                </div>
+
+                <div class="controls-area">
+                    <div id="panel-A5" class="domain-panel active"></div>
+                    <div id="panel-A6" class="domain-panel"></div>
+                    <div id="panel-A7" class="domain-panel"></div>
+                    <div id="panel-A8" class="domain-panel"></div>
+                </div>
             </div>
-
-            <div id="content-A5" class="dominio-content active"></div>
-            <div id="content-A6" class="dominio-content"></div>
-            <div id="content-A7" class="dominio-content"></div>
-            <div id="content-A8" class="dominio-content"></div>
-
         </div>
     </main>
 
-    <div id="modal-acao" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Plano de Ação Imediato</h3>
-                <button class="close-btn" onclick="fecharModalAcao()">&times;</button>
+    <div class="drawer-overlay" id="drawer-overlay" onclick="fecharDrawer()"></div>
+    <div class="side-drawer" id="drawer-mitigacao">
+        <div class="drawer-header">
+            <h3>🚨 Registar Plano de Mitigação</h3>
+            <button class="drawer-close" onclick="fecharDrawer()">&times;</button>
+        </div>
+        <div class="drawer-body">
+            <p style="font-size: 13px; color: #64748b; margin-top: 0;">Registo de não-conformidade para o controlo: <strong id="drawer-id-ctrl" style="color: var(--primary);"></strong></p>
+            
+            <div class="input-group" style="margin-top: 25px;">
+                <label>Grau de Risco</label>
+                <select id="drawer-risco" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    <option value="CRÍTICO">Crítico (Imediato)</option>
+                    <option value="ALTO">Alto</option>
+                    <option value="MÉDIO">Médio</option>
+                </select>
             </div>
-            <div class="modal-body">
-                <div class="alert-falha">
-                    <strong>Falha Detetada:</strong> O controlo <span id="modal-id-controlo"></span> não cumpre os requisitos mínimos estabelecidos pela norma ISO 27001.
-                </div>
-                
-                <div class="flex-row">
-                    <div class="form-group">
-                        <label>Responsável (Opcional)</label>
-                        <input type="text" id="acao-responsavel" placeholder="Ex: IT Manager">
-                    </div>
-                    <div class="form-group">
-                        <label>Prazo (Opcional)</label>
-                        <input type="date" id="acao-prazo">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Solução Recomendada</label>
-                    <textarea id="acao-solucao" style="height: 100px;" placeholder="O que deve ser feito para corrigir isto?"></textarea>
-                </div>
+            
+            <div class="input-group">
+                <label>Responsável pela Resolução</label>
+                <input type="text" id="drawer-resp" placeholder="Ex: CISO, IT Support...">
             </div>
-            <div class="modal-footer">
-                <button class="btn-cancelar" onclick="fecharModalAcao()">Cancelar</button>
-                <button class="btn-aplicar" onclick="salvarAcaoCorretiva()">Aplicar à Auditoria</button>
+            
+            <div class="input-group">
+                <label>Procedimento Recomendado</label>
+                <textarea id="drawer-procedimento" style="width: 100%; height: 120px; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-family: inherit; resize: vertical;" placeholder="Descreva os passos necessários para atingir a conformidade..."></textarea>
             </div>
+        </div>
+        <div class="drawer-footer">
+            <button class="btn-upload" onclick="fecharDrawer()">Cancelar</button>
+            <button class="btn-primario" onclick="salvarMitigacao()">Registar no Sistema</button>
         </div>
     </div>
 
     <script src="config.js"></script>
     <script>
         const user = JSON.parse(localStorage.getItem('usuario')) || { nome: "Nuno Carvalho" };
-        let controloEmAcao = null; // Guarda o ID do controlo que está a receber o plano de ação
+        let controloAlvo = null;
 
         // ==========================================
-        // GESTÃO DE VISÕES (NAVEGAÇÃO)
+        // GESTÃO DE VIEWS
         // ==========================================
-        function esconderTodasViews() {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-        }
-
-        function voltarLista() {
-            esconderTodasViews();
-            document.getElementById('view-lista').classList.add('active');
-        }
-
+        function esconderViews() { document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active')); }
+        function voltarLista() { esconderViews(); document.getElementById('view-lista').classList.add('active'); }
+        
         function abrirNovaAuditoria() {
-            esconderTodasViews();
-            document.getElementById('nova-data').value = new Date().toISOString().slice(0, 16);
+            esconderViews();
             document.getElementById('view-nova').classList.add('active');
+            setTimeout(iniciarCanvas, 100); // Dar tempo para o canvas renderizar
         }
 
-        function iniciarAuditoria() {
-            const empresa = document.getElementById('nova-empresa').value;
-            if(!empresa) { alert("Por favor, introduza o nome da Organização a auditar."); return; }
-            abrirChecklist(empresa);
+        function concluirCriacao() {
+            const emp = document.getElementById('nova-empresa').value;
+            if(!emp) { alert("Introduza a Entidade Alvo."); return; }
+            abrirWorkspace(emp);
         }
 
-        function abrirChecklist(nomeEmpresa) {
-            document.getElementById('nome-auditoria-ativa').innerText = nomeEmpresa;
-            esconderTodasViews();
-            document.getElementById('view-checklist').classList.add('active');
-            carregarControlosDaBD(); // Carrega da BD e desenha os cartões
+        function abrirWorkspace(empresa) {
+            document.getElementById('ws-empresa-nome').innerText = empresa;
+            esconderViews();
+            document.getElementById('view-workspace').classList.add('active');
+            carregarControlosAiven();
         }
 
         // ==========================================
-        // GESTÃO DE TABS (DOMÍNIOS)
+        // ASSINATURA DIGITAL (CANVAS)
         // ==========================================
-        function mudarDominio(idDominio, btnElement) {
-            // Atualiza botões
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            btnElement.classList.add('active');
+        let canvas, ctx, desenhando = false;
+        function iniciarCanvas() {
+            canvas = document.getElementById('signature-pad');
+            if(!canvas) return;
+            ctx = canvas.getContext('2d');
+            // Ajustar resolução
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
             
-            // Atualiza painéis
-            document.querySelectorAll('.dominio-content').forEach(panel => panel.classList.remove('active'));
-            document.getElementById('content-' + idDominio).classList.add('active');
+            canvas.onmousedown = (e) => { desenhando = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); };
+            canvas.onmousemove = (e) => { if(desenhando){ ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#0f172a'; ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } };
+            canvas.onmouseup = () => desenhando = false;
+            canvas.onmouseleave = () => desenhando = false;
+        }
+        function limparAssinatura() { if(ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+        // ==========================================
+        // MENU LATERAL (DOMÍNIOS) E ACORDEÃO
+        // ==========================================
+        function mudarPainel(id, btn) {
+            document.querySelectorAll('.domain-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.domain-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('panel-' + id).classList.add('active');
+        }
+
+        function toggleAcordeao(headerElement) {
+            const item = headerElement.parentElement;
+            // Fecha os outros
+            document.querySelectorAll('.accordion-item').forEach(i => { if(i !== item) i.classList.remove('open'); });
+            // Abre o clicado
+            item.classList.toggle('open');
         }
 
         // ==========================================
-        // LÓGICA DE DADOS E RENDERIZAÇÃO DOS CARTÕES
+        // LÓGICA DE DADOS (AIVEN) E RENDERIZAÇÃO
         // ==========================================
-        async function carregarControlosDaBD() {
+        async function carregarControlosAiven() {
             try {
-                // Vai buscar os dados ao teu servidor Aiven
                 const resp = await fetch(API_URL + '/api/controlos');
                 const controlos = await resp.json();
 
-                // Limpa os contentores
-                document.getElementById('content-A5').innerHTML = '';
-                document.getElementById('content-A6').innerHTML = '';
-                document.getElementById('content-A7').innerHTML = '';
-                document.getElementById('content-A8').innerHTML = '';
+                ['A5', 'A6', 'A7', 'A8'].forEach(id => document.getElementById('panel-'+id).innerHTML = '');
 
                 controlos.forEach(c => {
-                    let prefixo = '';
-                    if(c.id_controlo.startsWith('A.5')) prefixo = 'A5';
-                    else if(c.id_controlo.startsWith('A.6')) prefixo = 'A6';
-                    else if(c.id_controlo.startsWith('A.7')) prefixo = 'A7';
-                    else if(c.id_controlo.startsWith('A.8')) prefixo = 'A8';
-                    else prefixo = 'A5'; // Fallback
+                    let pfx = 'A5';
+                    if(c.id_controlo.startsWith('A.6')) pfx = 'A6';
+                    if(c.id_controlo.startsWith('A.7')) pfx = 'A7';
+                    if(c.id_controlo.startsWith('A.8')) pfx = 'A8';
 
-                    // Lógica para pre-selecionar botões baseado na BD
-                    const isSim = c.estado === 'CONFORME' ? 'selected' : '';
-                    const isNao = c.estado === 'NÃO CONFORME' || (c.estado === 'PENDENTE' && c.risco==='CRÍTICO') ? 'selected' : '';
+                    let checkSim = c.estado === 'CONFORME' ? 'checked' : '';
+                    let checkNao = c.estado === 'NÃO CONFORME' || (c.estado==='PENDENTE' && c.risco==='CRÍTICO') ? 'checked' : '';
+                    let displayMitiga = checkNao ? 'inline-block' : 'none';
                     
-                    // Se estiver NÃO CONFORME, o botão de ação corretiva deve estar visível
-                    const displayAcaoBtn = isNao === 'selected' ? 'block' : 'none';
+                    let dotClass = 'dot-pendente';
+                    if(checkSim) dotClass = 'dot-conforme';
+                    if(checkNao) dotClass = 'dot-nao-conforme';
 
-                    // Desenha o cartão de acordo com o design do colega
-                    const cartaoHTML = `
-                        <div class="control-card" id="card-${c.id_controlo}">
-                            <div class="control-header">
-                                📖 ${c.id_controlo} - ${c.nome_controlo}
-                            </div>
-                            <div class="control-body">
-                                <div class="control-question">Este controlo de segurança encontra-se implementado e gerido adequadamente na organização?</div>
-                                
-                                <div class="toggle-group">
-                                    <div class="toggle-btn sim ${isSim}" onclick="selecionarToggle('${c.id_controlo}', 'sim')">SIM</div>
-                                    <div class="toggle-btn nao ${isNao}" onclick="selecionarToggle('${c.id_controlo}', 'nao')">NÃO</div>
-                                    <div class="toggle-btn na" onclick="selecionarToggle('${c.id_controlo}', 'na')">NA</div>
+                    const html = `
+                        <div class="accordion-item" id="item-${c.id_controlo}">
+                            <div class="accordion-header" onclick="toggleAcordeao(this)">
+                                <div class="control-title">
+                                    <span class="status-dot ${dotClass}" id="dot-${c.id_controlo}"></span>
+                                    ${c.id_controlo} - ${c.nome_controlo}
                                 </div>
-
-                                <textarea class="obs-area" id="obs-${c.id_controlo}" placeholder="Adicione uma nota, justificação ou observação de auditoria..."></textarea>
-                                
-                                <div class="card-actions">
-                                    <button class="btn-anexar">📎 Anexar Evidência</button>
-                                    <div class="action-right-group">
-                                        <button class="btn-acao-corretiva" id="btn-acao-${c.id_controlo}" style="display: ${displayAcaoBtn};" onclick="abrirModalAcao('${c.id_controlo}')">🚨 Criar Ação Corretiva</button>
-                                        <button class="btn-guardar-cartao" onclick="guardarAvaliacao('${c.id_controlo}')">Guardar</button>
+                                <span style="color:#94a3b8; font-size:12px;">▼</span>
+                            </div>
+                            <div class="accordion-body">
+                                <div class="eval-grid">
+                                    <div>
+                                        <label style="font-size:12px; font-weight:600; color:#64748b; display:block; margin-bottom:8px;">Estado de Conformidade</label>
+                                        <div class="radio-pills">
+                                            <input type="radio" name="rad-${c.id_controlo}" id="sim-${c.id_controlo}" value="sim" ${checkSim} onchange="verificarNao('${c.id_controlo}')">
+                                            <label for="sim-${c.id_controlo}" class="lbl-sim">SIM</label>
+                                            
+                                            <input type="radio" name="rad-${c.id_controlo}" id="nao-${c.id_controlo}" value="nao" ${checkNao} onchange="verificarNao('${c.id_controlo}')">
+                                            <label for="nao-${c.id_controlo}" class="lbl-nao">NÃO</label>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:12px; font-weight:600; color:#64748b; display:block; margin-bottom:8px;">Observações do Auditor</label>
+                                        <textarea class="input-nota" id="nota-${c.id_controlo}" placeholder="Registe anomalias ou notas justificativas..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="action-bar">
+                                    <div>
+                                        <input type="file" id="file-${c.id_controlo}" style="display:none;" onchange="simularUpload(event, '${c.id_controlo}')">
+                                        <button class="btn-upload" id="btn-anexar-${c.id_controlo}" onclick="document.getElementById('file-${c.id_controlo}').click()">📎 Anexar Evidência</button>
+                                    </div>
+                                    <div style="display:flex; gap:10px;">
+                                        <button class="btn-mitigacao" id="btn-mitiga-${c.id_controlo}" style="display:${displayMitiga};" onclick="abrirDrawer('${c.id_controlo}')">🚨 Registar Plano de Mitigação</button>
+                                        <button class="btn-save-inline" onclick="guardarLinha('${c.id_controlo}')">Guardar Dados</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     `;
-                    
-                    document.getElementById('content-' + prefixo).innerHTML += cartaoHTML;
+                    document.getElementById('panel-'+pfx).innerHTML += html;
                 });
-
-            } catch (err) {
-                console.error("Erro ao desenhar controlos:", err);
-            }
+            } catch (e) { console.error(e); }
         }
 
         // ==========================================
-        // LÓGICA DE INTERAÇÃO DOS CARTÕES
+        // INTERAÇÕES DOS CONTROLOS
         // ==========================================
-        function selecionarToggle(idControlo, valor) {
-            // Remove a seleção atual deste cartão específico
-            const cartao = document.getElementById('card-' + idControlo);
-            cartao.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('selected'));
-            
-            // Adiciona a seleção no botão clicado
-            cartao.querySelector('.toggle-btn.' + valor).classList.add('selected');
+        function verificarNao(id) {
+            const isNao = document.getElementById(`nao-${id}`).checked;
+            document.getElementById(`btn-mitiga-${id}`).style.display = isNao ? 'inline-block' : 'none';
+        }
 
-            // Magia: Mostrar o botão vermelho de Ação Corretiva apenas se for NÃO
-            const btnAcao = document.getElementById('btn-acao-' + idControlo);
-            if(valor === 'nao') {
-                btnAcao.style.display = 'block';
-            } else {
-                btnAcao.style.display = 'none';
+        function simularUpload(e, id) {
+            const ficheiro = e.target.files[0];
+            if(ficheiro) {
+                const btn = document.getElementById(`btn-anexar-${id}`);
+                btn.innerHTML = `✅ ${ficheiro.name}`;
+                btn.style.color = 'var(--success)';
+                btn.style.borderColor = 'var(--success)';
+                btn.style.background = '#f0fdf4';
             }
         }
 
-        async function guardarAvaliacao(idControlo) {
-            const cartao = document.getElementById(`card-${idControlo}`);
-            const btnSim = cartao.querySelector('.toggle-btn.sim').classList.contains('selected');
-            const btnNao = cartao.querySelector('.toggle-btn.nao').classList.contains('selected');
-            
-            // Determina o estado a enviar para o teu servidor
+        async function guardarLinha(id) {
+            const isSim = document.getElementById(`sim-${id}`).checked;
+            const isNao = document.getElementById(`nao-${id}`).checked;
             let novoEstado = 'PENDENTE';
-            if (btnSim) novoEstado = 'CONFORME';
-            if (btnNao) novoEstado = 'NÃO CONFORME';
+            if(isSim) novoEstado = 'CONFORME';
+            if(isNao) novoEstado = 'NÃO CONFORME';
 
             try {
-                // Comunica com o teu servidor exato (que já tens configurado no Node.js)
-                const resp = await fetch(API_URL + '/api/update-status', {
+                await fetch(API_URL + '/api/update-status', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: idControlo, novo_estado: novoEstado, auditor: user.nome })
+                    body: JSON.stringify({ id: id, novo_estado: novoEstado, auditor: user.nome })
                 });
-
-                if(resp.ok) {
-                    alert(`✅ Avaliação do controlo ${idControlo} guardada com sucesso!`);
-                } else {
-                    alert("⚠️ Ocorreu um erro ao guardar na base de dados.");
-                }
-            } catch (err) {
-                console.error("Erro ao guardar:", err);
-            }
+                
+                // Atualiza a bolinha visualmente
+                const dot = document.getElementById(`dot-${id}`);
+                dot.className = 'status-dot';
+                if(isSim) dot.classList.add('dot-conforme');
+                if(isNao) dot.classList.add('dot-nao-conforme');
+                if(!isSim && !isNao) dot.classList.add('dot-pendente');
+                
+                alert(`Guardado com sucesso: ${id}`);
+                // Fecha o acordeão automaticamente
+                document.getElementById(`item-${id}`).classList.remove('open');
+            } catch (err) { console.error(err); }
         }
 
         // ==========================================
-        // LÓGICA DO MODAL PLANO DE AÇÃO CORRETIVA
+        // DRAWER (PLANO DE MITIGAÇÃO)
         // ==========================================
-        function abrirModalAcao(idControlo) {
-            controloEmAcao = idControlo;
-            document.getElementById('modal-id-controlo').innerText = idControlo;
-            document.getElementById('acao-responsavel').value = '';
-            document.getElementById('acao-solucao').value = '';
-            document.getElementById('modal-acao').style.display = 'flex';
+        function abrirDrawer(id) {
+            controloAlvo = id;
+            document.getElementById('drawer-id-ctrl').innerText = id;
+            document.getElementById('drawer-resp').value = '';
+            document.getElementById('drawer-procedimento').value = '';
+            document.getElementById('drawer-overlay').classList.add('open');
+            document.getElementById('drawer-mitigacao').classList.add('open');
         }
 
-        function fecharModalAcao() {
-            document.getElementById('modal-acao').style.display = 'none';
+        function fecharDrawer() {
+            document.getElementById('drawer-overlay').classList.remove('open');
+            document.getElementById('drawer-mitigacao').classList.remove('open');
         }
 
-        async function salvarAcaoCorretiva() {
-            const solucao = document.getElementById('acao-solucao').value;
-            const responsavel = document.getElementById('acao-responsavel').value;
-            
-            if(!solucao) {
-                alert("Por favor, descreva a solução recomendada.");
-                return;
-            }
+        async function salvarMitigacao() {
+            const solucao = document.getElementById('drawer-procedimento').value;
+            if(!solucao) { alert("Preencha o procedimento recomendado."); return; }
 
             try {
-                // Usa a tua rota existente para mitigar riscos
                 await fetch(API_URL + '/api/mitigar-risco', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        id_controlo: controloEmAcao, 
-                        plano_acao: `Responsável: ${responsavel || 'Não atribuído'}\nAção: ${solucao}`, 
-                        auditor: user.nome 
-                    })
+                    body: JSON.stringify({ id_controlo: controloAlvo, plano_acao: solucao, auditor: user.nome })
                 });
-
-                alert(`🎯 Plano de Ação para o controlo ${controloEmAcao} submetido com sucesso!`);
-                fecharModalAcao();
-                
-            } catch (err) {
-                console.error("Erro ao guardar plano de ação:", err);
-            }
+                alert("Plano de mitigação registado no sistema.");
+                fecharDrawer();
+            } catch (err) { console.error(err); }
         }
 
-        // Inicia carregando a lista inicial
-        window.onload = () => {
-            // Se for preciso, inicializar algo.
-        };
     </script>
 </body>
 </html>
