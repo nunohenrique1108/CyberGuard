@@ -49,7 +49,7 @@
         /* Content Area */
         .main-content { flex: 1; margin-left: 260px; padding: 40px; }
         
-        /* NOVO: Banner de Boas-Vindas Profissional */
+        /* Banner de Boas-Vindas Profissional */
         .welcome-banner {
             display: flex; 
             justify-content: space-between; 
@@ -165,18 +165,21 @@
             // Personalização: Colocar a data de hoje em formato bonito
             const opcoesData = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             const dataFormatada = new Date().toLocaleDateString('pt-PT', opcoesData);
-            // Primeira letra maiúscula
             document.getElementById('current-date').innerText = dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1);
 
             try {
-                const respStats = await fetch(API_URL + '/api/stats');
-                const stats = await respStats.json();
+                // Removemos a dependência do /api/stats antigo e calculamos de forma absoluta com os controlos reais
                 const respControlos = await fetch(API_URL + '/api/controlos');
                 const docs = await respControlos.json();
 
-                document.getElementById('total-count').innerText = stats.total || 93;
-                document.getElementById('conforme-count').innerText = stats.conforme || 0;
-                document.getElementById('pendente-count').innerText = stats.pendente || 0;
+                // Lógica Matemática Correta e Sincronizada
+                const totalControlos = docs.length || 0;
+                const countConforme = docs.filter(c => c.estado === 'CONFORME').length;
+                const countPendente = totalControlos - countConforme; // Tudo o que não está perfeitamente conforme (incluindo o plano aplicado), é contabilizado como pendente.
+
+                document.getElementById('total-count').innerText = totalControlos;
+                document.getElementById('conforme-count').innerText = countConforme;
+                document.getElementById('pendente-count').innerText = countPendente;
 
                 // Radar Chart - Maturidade
                 new Chart(document.getElementById('radarChart'), {
@@ -185,7 +188,7 @@
                         labels: ['Organizacional', 'Pessoas', 'Físico', 'Tecnológico'],
                         datasets: [{
                             label: 'Nível Atual',
-                            data: [85, 45, 90, 60], // Valores simulados para o gráfico ficar bonito
+                            data: [85, 45, 90, 60], // Valores simulados para o gráfico ficar bonito na apresentação
                             backgroundColor: 'rgba(52, 152, 219, 0.2)',
                             borderColor: 'rgb(52, 152, 219)',
                             pointBackgroundColor: 'rgb(52, 152, 219)',
@@ -194,13 +197,13 @@
                     options: { maintainAspectRatio: false }
                 });
 
-                // Doughnut Chart
+                // Doughnut Chart com dados reais
                 new Chart(document.getElementById('complianceChart'), {
                     type: 'doughnut',
                     data: {
-                        labels: ['Conforme', 'Pendente'],
+                        labels: ['Conforme', 'Requer Ação / Pendente'],
                         datasets: [{
-                            data: [stats.conforme, stats.pendente],
+                            data: [countConforme, countPendente],
                             backgroundColor: ['#27ae60', '#f39c12'],
                             cutout: '70%'
                         }]
@@ -210,8 +213,12 @@
 
                 const tbody = document.getElementById('lista-atividades');
                 tbody.innerHTML = '';
+                // Mostrar os últimos 5 controlos com a cor correta dependendo do novo estado
                 docs.slice(0, 5).forEach(item => {
-                    const cor = item.estado === 'CONFORME' ? 'var(--success)' : 'var(--warning)';
+                    let cor = 'var(--warning)';
+                    if(item.estado === 'CONFORME') cor = 'var(--success)';
+                    if(item.estado === 'PLANO APLICADO') cor = '#d4ac0d'; // Cor diferente para dar nas vistas
+                    
                     tbody.innerHTML += `
                         <tr>
                             <td><strong>${item.id_controlo}</strong></td>
