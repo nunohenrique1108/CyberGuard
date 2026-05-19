@@ -77,23 +77,37 @@
         }
 
         async function processarRegisto() {
-            const nome = document.getElementById('reg-nome').value;
-            const email = document.getElementById('reg-email').value;
-            const user = document.getElementById('reg-user').value;
-            const pass = document.getElementById('reg-pass').value;
+    // Vamos buscar os valores aos inputs do teu HTML
+    const nome = document.getElementById('reg-nome').value;
+    const email = document.getElementById('reg-email').value;
+    const username = document.getElementById('reg-user').value;
+    const password = document.getElementById('reg-pass').value;
 
-            if (!nome || !email || !user || !pass) { alert("Preencha tudo!"); return; }
+    try {
+        const response = await fetch(API_URL + '/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            // O BACKEND ESPERA EXATAMENTE ESTES NOMES: nome, username, password
+            body: JSON.stringify({ 
+                nome: nome, 
+                username: username, 
+                password: password 
+            })
+        });
 
-            try {
-                const resp = await fetch(API_URL + '/api/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nome, email, user, pass })
-                });
-                const data = await resp.json();
-                if (data.success) { alert("Conta criada!"); alternarForm('login'); }
-            } catch (err) { alert("Erro ao registar."); }
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            alert("✅ Conta encriptada e criada com sucesso! Podes fazer login.");
+            alternarForm('login'); // Volta para o ecrã de login
+        } else {
+            alert("⚠️ Erro ao registar: " + data.message);
         }
+    } catch (err) {
+        console.error(err);
+        alert("❌ Erro fatal ao comunicar com o servidor.");
+    }
+}
     </script>
 </body>
 </html>
