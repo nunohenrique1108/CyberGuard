@@ -55,6 +55,11 @@
         .btn-reset-2fa { width: 100%; background: var(--warning); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .btn-reset-2fa:hover { background: #d68910; }
 
+        /* Nova Secção RGPD */
+        .rgpd-box { margin-top: 30px; padding: 20px; border: 1px solid #e74c3c; border-radius: 8px; background: #fffafb; }
+        .btn-rgpd { width: 100%; background: var(--danger); color: white; border: none; padding: 10px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-rgpd:hover { background: #c0392b; }
+
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
         .badge-acao { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #e8f4fd; color: var(--accent); }
@@ -97,6 +102,14 @@
                     <button class="btn-pass" onclick="alterarPass()">Atualizar Password</button>
                     <button class="btn-reset-2fa" onclick="reset2FA()">⚠️ Resetar Autenticação 2FA</button>
                     <p style="font-size: 10px; color: #999; margin-top: 8px; text-align: center;">Ao resetar, será solicitado um novo QR Code no próximo login.</p>
+                </div>
+
+                <div class="rgpd-box">
+                    <div class="info-label" style="color: #c0392b; font-size: 13px;">⚠️ Zona de Perigo (RGPD)</div>
+                    <p style="color: #7f8c8d; font-size: 11px; margin-top: 5px; line-height: 1.4;">
+                        Ao abrigo do Artigo 17º do RGPD, tem o direito de solicitar a eliminação total dos seus dados pessoais dos nossos servidores (Direito ao Esquecimento). Esta ação é <b>irreversível</b>.
+                    </p>
+                    <button class="btn-rgpd" onclick="exercerDireitoEsquecimento()">🗑️ Eliminar a Minha Conta</button>
                 </div>
             </div>
 
@@ -171,7 +184,6 @@
             }
         }
 
-        // Nova Função para Resetar o 2FA
         async function reset2FA() {
             const user = JSON.parse(localStorage.getItem('usuario'));
             if (!confirm("Tem a certeza que deseja resetar o 2FA? Terá de configurar um novo QR Code no próximo login.")) return;
@@ -191,6 +203,35 @@
                 }
             } catch (err) {
                 alert("❌ Erro de ligação ao servidor.");
+            }
+        }
+
+        // LÓGICA DO DIREITO AO ESQUECIMENTO (RGPD)
+        async function exercerDireitoEsquecimento() {
+            const confirmacao = confirm("⚠️ ATENÇÃO: Tem a certeza absoluta? Todos os seus dados, histórico e configurações serão eliminados permanentemente. Esta ação não pode ser desfeita.");
+            
+            if (confirmacao) {
+                const user = JSON.parse(localStorage.getItem('usuario'));
+                
+                try {
+                    const response = await fetch(API_URL + '/api/apagar-conta', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: user.id })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        alert("✅ Os seus dados foram eliminados permanentemente ao abrigo do RGPD.");
+                        localStorage.clear();
+                        window.location.href = 'index.html';
+                    } else {
+                        alert("❌ Erro ao eliminar a conta.");
+                    }
+                } catch (err) {
+                    alert("❌ Erro de ligação ao servidor.");
+                }
             }
         }
 

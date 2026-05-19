@@ -21,14 +21,17 @@
         <div id="login-box">
             <h1>🛡️ CyberGuard</h1>
             <p style="color:var(--accent); font-size: 11px; font-weight: bold; margin-bottom: 30px; letter-spacing: 2px;">AUTENTICAÇÃO DE AUDITOR</p>
+            
             <div class="input-group">
                 <label>Utilizador</label>
                 <input type="text" id="user" placeholder="Username">
             </div>
+            
             <div class="input-group">
                 <label>Password</label>
                 <input type="password" id="pass" placeholder="••••••••">
             </div>
+            
             <button class="btn" onclick="fazerLogin()">Entrar</button>
             <p style="margin-top: 20px;"><a onclick="alternarForm('register')">Novo por aqui? Criar conta</a></p>
         </div>
@@ -36,14 +39,24 @@
         <div id="register-box" style="display: none;">
             <h1>📝 Registo</h1>
             <p style="color:var(--success); font-size: 11px; font-weight: bold; margin-bottom: 30px; letter-spacing: 2px;">NOVA CONTA GRC</p>
+            
             <div class="input-group"><label>Nome Completo</label><input type="text" id="reg-nome"></div>
             <div class="input-group"><label>Email Profissional</label><input type="email" id="reg-email" placeholder="exemplo@empresa.com"></div>
             <div class="input-group"><label>Utilizador</label><input type="text" id="reg-user"></div>
             <div class="input-group"><label>Password</label><input type="password" id="reg-pass"></div>
+            
+            <div style="margin: 15px 0; text-align: left; font-size: 13px; color: #7f8c8d;">
+                <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="reg-consentimento" style="margin-top: 3px;">
+                    <span>Compreendo e consinto o tratamento dos meus dados pessoais para efeitos de auditoria, ao abrigo do Regulamento Geral sobre a Proteção de Dados (RGPD).</span>
+                </label>
+            </div>
+
             <button class="btn" style="background: var(--success);" onclick="processarRegisto()">Criar Conta</button>
             <p style="margin-top: 20px;"><a onclick="alternarForm('login')" style="color:#bbb">← Voltar para Login</a></p>
         </div>
     </div>
+
     <script src="config.js"></script>
     <script>
         function alternarForm(tipo) {
@@ -77,37 +90,42 @@
         }
 
         async function processarRegisto() {
-    // Vamos buscar os valores aos inputs do teu HTML
-    const nome = document.getElementById('reg-nome').value;
-    const email = document.getElementById('reg-email').value;
-    const username = document.getElementById('reg-user').value;
-    const password = document.getElementById('reg-pass').value;
+            const consentimento = document.getElementById('reg-consentimento').checked;
+            
+            if (!consentimento) {
+                alert("⚠️ Ao abrigo do RGPD, tem de dar o seu consentimento para criar conta.");
+                return;
+            }
+            
+            const nome = document.getElementById('reg-nome').value;
+            const email = document.getElementById('reg-email').value;
+            const username = document.getElementById('reg-user').value;
+            const password = document.getElementById('reg-pass').value;
 
-    try {
-        const response = await fetch(API_URL + '/api/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            // O BACKEND ESPERA EXATAMENTE ESTES NOMES: nome, username, password
-            body: JSON.stringify({ 
-                nome: nome, 
-                username: username, 
-                password: password 
-            })
-        });
+            try {
+                const response = await fetch(API_URL + '/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        nome: nome, 
+                        username: username, 
+                        password: password 
+                    })
+                });
 
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-            alert("✅ Conta encriptada e criada com sucesso! Podes fazer login.");
-            alternarForm('login'); // Volta para o ecrã de login
-        } else {
-            alert("⚠️ Erro ao registar: " + data.message);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    alert("✅ Conta encriptada e criada com sucesso! Podes fazer login.");
+                    alternarForm('login'); // Volta para o ecrã de login
+                } else {
+                    alert("⚠️ Erro ao registar: " + data.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("❌ Erro fatal ao comunicar com o servidor.");
+            }
         }
-    } catch (err) {
-        console.error(err);
-        alert("❌ Erro fatal ao comunicar com o servidor.");
-    }
-}
     </script>
 </body>
 </html>

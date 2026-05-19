@@ -278,6 +278,31 @@ app.post('/api/mitigar-risco', async (req, res) => {
     } catch (err) { res.status(500).json({ error: "Erro DB" }); }
 });
 
+// ==========================================
+// DIREITO AO ESQUECIMENTO (RGPD)
+// ==========================================
+app.post('/api/apagar-conta', async (req, res) => {
+    try {
+        const { userId } = req.body;
+        
+        if (!userId) {
+            return res.status(400).json({ success: false, message: 'ID em falta' });
+        }
+
+        // Apaga o utilizador da base de dados permanentemente
+        await db.query("DELETE FROM utilizadores WHERE id = ?", [userId]);
+        
+        // (Opcional) Pode-se registar nos logs que um titular exerceu o Direito ao Esquecimento
+        await db.query("INSERT INTO logs_auditoria (id_controlo, acao, usuario) VALUES (?, ?, ?)", 
+            ['RGPD', 'Direito ao Esquecimento exercido - Conta eliminada', 'Sistema']);
+
+        res.json({ success: true, message: 'Dados eliminados com sucesso' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Erro ao eliminar dados' });
+    }
+});
+
 app.use((req, res) => {
     res.sendFile(path.join(__dirname, 'site', 'index.html'));
 });
