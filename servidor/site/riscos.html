@@ -193,7 +193,17 @@
 
     <script src="config.js"></script>
     <script>
-        const user = JSON.parse(localStorage.getItem('usuario')) || { nome: "Nuno Carvalho" };
+        // 1. SISTEMA À PROVA DE FALHAS PARA O UTILIZADOR
+        let user = { nome: "Nuno Carvalho" };
+        try {
+            const localUser = localStorage.getItem('usuario');
+            if (localUser && localUser !== "undefined") {
+                user = JSON.parse(localUser);
+            }
+        } catch (e) {
+            console.warn("Conta não encontrada. A usar Auditor Default.");
+        }
+
         let riscoAtual = null;
 
         // Gestão de Abas
@@ -205,7 +215,7 @@
             document.getElementById(`tab-${tabName}`).classList.add('active');
         }
 
-        // Carregar Todos os Controlos e Filtrar pelas 3 Abas
+        // Carregar Riscos
         async function carregarRiscos() {
             try {
                 const response = await fetch(API_URL + '/api/controlos');
@@ -221,15 +231,12 @@
                 listaAguarda.innerHTML = '';
                 listaMitigados.innerHTML = '';
 
-                let countAcao = 0;
-                let countAguarda = 0;
-                let countMitigados = 0;
+                let countAcao = 0; let countAguarda = 0; let countMitigados = 0;
 
                 todosControlos.forEach(c => {
                     const nomeEmpresa = c.empresa || 'CyberGuard GRC';
                     
                     if (c.estado === 'CONFORME') {
-                        // ABA 3: TOTALMENTE MITIGADOS
                         countMitigados++;
                         listaMitigados.innerHTML += `
                             <div class="ticket-card sucesso">
@@ -242,11 +249,9 @@
                                     <p class="ticket-desc" style="color: #7f8c8d; text-decoration: line-through;">${c.nome_controlo}</p>
                                 </div>
                                 <div class="btn-resolvido">✓ Mitigado por ${user.nome}</div>
-                            </div>
-                        `;
+                            </div>`;
                     } 
                     else if (c.estado === 'PLANO APLICADO') {
-                        // ABA 2: AGUARDA EVIDÊNCIA FÍSICA
                         countAguarda++;
                         listaAguarda.innerHTML += `
                             <div class="ticket-card aguarda">
@@ -261,15 +266,11 @@
                                 </div>
                                 <div>
                                     <input type="file" id="file-risco-${c.id_controlo}" style="display:none;" onchange="subirEvidenciaRisco('${c.id_controlo}')">
-                                    <button class="btn-acao anexar" onclick="document.getElementById('file-risco-${c.id_controlo}').click()">
-                                        📎 Anexar Evidência
-                                    </button>
+                                    <button class="btn-acao anexar" onclick="document.getElementById('file-risco-${c.id_controlo}').click()">📎 Anexar Evidência</button>
                                 </div>
-                            </div>
-                        `;
+                            </div>`;
                     } 
                     else {
-                        // ABA 1: REQUER AÇÃO (PENDENTES / NÃO CONFORMES)
                         countAcao++;
                         let classeBorda = c.risco === 'CRÍTICO' ? 'critico' : 'medio';
                         let corRisco = c.risco === 'CRÍTICO' ? 'var(--danger)' : 'var(--warning)';
@@ -286,26 +287,19 @@
                                     </div>
                                     <p class="ticket-desc">${c.nome_controlo}</p>
                                 </div>
-                                <button class="${btnClasse}" onclick="abrirModal('${c.id_controlo}', '${c.nome_controlo.replace(/'/g, "\\'")}')">
-                                    🛠️ Tratar Risco
-                                </button>
-                            </div>
-                        `;
+                                <button class="${btnClasse}" onclick="abrirModal('${c.id_controlo}', '${c.nome_controlo.replace(/'/g, "\\'")}')">🛠️ Tratar Risco</button>
+                            </div>`;
                     }
                 });
 
-                // Atualiza contadores nas abas
                 document.getElementById('contagem-acao').innerText = countAcao;
                 document.getElementById('contagem-aguarda').innerText = countAguarda;
                 
-                // Atualiza os Empty States
                 document.getElementById('empty-acao').style.display = countAcao === 0 ? 'block' : 'none';
                 document.getElementById('empty-aguarda').style.display = countAguarda === 0 ? 'block' : 'none';
                 document.getElementById('empty-mitigados').style.display = countMitigados === 0 ? 'block' : 'none';
 
-            } catch (err) {
-                console.error("Erro:", err);
-            }
+            } catch (err) { console.error("Erro:", err); }
         }
 
         // Lógica do Modal
@@ -316,7 +310,6 @@
             document.getElementById('texto-plano').value = '';
             document.getElementById('caixa-sugestao-ia').style.display = 'none';
             document.getElementById('texto-ia-animado').innerText = '';
-            
             document.getElementById('modal-tratamento').style.display = 'flex';
         }
 
@@ -340,13 +333,12 @@
                     "Elaborar e aprovar formalmente uma política de backups imutáveis, garantindo testes de restauração trimestrais documentados."
                 ];
                 const solucaoAleatoria = sugestoes[Math.floor(Math.random() * sugestoes.length)];
-                
                 textoLocal.innerHTML = solucaoAleatoria;
                 document.getElementById('texto-plano').value = solucaoAleatoria; 
             }, 1500);
         }
 
-        // 1. Gravação na Base de Dados (Passa a PLANO APLICADO / Aguarda Evidência)
+        // 2. FUNÇÃO BLINDADA PARA GRAVAR O RISCO
         async function resolverRisco() {
             const plano = document.getElementById('texto-plano').value;
             
@@ -356,7 +348,6 @@
             }
 
             try {
-                // Certifica-te de que o server.js que enviei na mensagem anterior está ativo!
                 const response = await fetch(API_URL + '/api/mitigar-risco', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -367,21 +358,29 @@
                     })
                 });
 
+                if (!response.ok) {
+                    alert("❌ O servidor rejeitou o pedido (Erro " + response.status + "). Confirma se já enviaste o novo server.js para o GitHub.");
+                    return;
+                }
+
                 const result = await response.json();
                 
                 if(result.success) {
-                    alert(`🎯 Plano guardado com sucesso!\nO risco transitou para a aba "Aguarda Evidência".`);
+                    alert(`🎯 Plano de Ação guardado!\nO risco transitou para a aba "Aguarda Evidência".`);
                     fecharModal();
                     carregarRiscos(); 
+                } else {
+                    // Se o servidor devolver falso
+                    alert("❌ A Base de Dados falhou ao gravar o plano. Tenta novamente.");
                 }
 
             } catch (err) {
                 console.error("Erro ao mitigar risco:", err);
-                alert("Erro ao comunicar com o servidor da Base de Dados.");
+                alert("❌ O JavaScript parou ou perdeste a ligação à internet.");
             }
         }
 
-        // 2. Upload da Evidência (Passa a CONFORME / Mitigado)
+        // Upload da Evidência
         async function subirEvidenciaRisco(id) {
             const fileInput = document.getElementById(`file-risco-${id}`);
             if (!fileInput.files[0]) return;
@@ -391,32 +390,22 @@
             formData.append('id_controlo', id);
 
             try {
-                // Faz o upload do ficheiro
-                const resUpload = await fetch(API_URL + '/api/evidencias/upload', {
-                    method: 'POST',
-                    body: formData
-                });
+                const resUpload = await fetch(API_URL + '/api/evidencias/upload', { method: 'POST', body: formData });
                 const dataUpload = await resUpload.json();
 
                 if (dataUpload.success) {
-                    // Se o upload correr bem, muda o estado para CONFORME
                     await fetch(API_URL + '/api/update-status', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({ id: id, novo_estado: 'CONFORME', auditor: user.nome })
                     });
                     
-                    alert("✅ Evidência anexada com sucesso! O controlo está agora CONFORME e o risco foi totalmente mitigado.");
+                    alert("✅ Evidência anexada com sucesso! O risco foi totalmente mitigado.");
                     carregarRiscos();
-                } else { 
-                    alert("Falha no upload da evidência."); 
-                }
-            } catch (err) { 
-                alert("Erro de comunicação ao anexar evidência."); 
-            }
+                } else { alert("Falha no upload da evidência."); }
+            } catch (err) { alert("Erro de comunicação ao anexar evidência."); }
         }
 
-        // Inicia a aplicação
         window.onload = carregarRiscos;
     </script>
 </body>
