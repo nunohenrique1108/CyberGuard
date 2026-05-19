@@ -76,13 +76,17 @@ async function inicializarBancoNuvem() {
         if (users.length === 0) {
             const hashedPassword = await bcrypt.hash('1234', 12);
             await db.query("INSERT INTO utilizadores (nome, username, password) VALUES (?, ?, ?)", ['Nuno Carvalho', 'nuno', hashedPassword]);
+            console.log("✅ Utilizador default criado.");
         }
 
         await db.query("INSERT IGNORE INTO empresas (id_empresa, nome_empresa) VALUES (1, 'CyberGuard GRC')");
         await db.query("INSERT IGNORE INTO auditorias (id_controlo, nome_controlo, risco, id_empresa) VALUES ('A.5.1', 'Políticas de Segurança da Informação', 'CRÍTICO', 1)");
 
+        // MENSAGEM QUE FALTAVA
+        console.log("✅ Base de Dados na Nuvem configurada com sucesso!");
+
     } catch (err) {
-        console.error(err.message);
+        console.error("❌ Erro DB:", err.message);
     }
 }
 inicializarBancoNuvem();
@@ -130,12 +134,16 @@ app.post('/api/2fa/setup', async (req, res) => {
     try {
         const { userId } = req.body;
         const secret = speakeasy.generateSecret({ name: `CyberGuard (${userId})` });
+        
         await db.query("UPDATE utilizadores SET secret_2fa = ? WHERE id = ?", [secret.base32, userId]);
+        
         qrcode.toDataURL(secret.otpauth_url, (err, data_url) => {
             if (err) return res.status(500).json({ success: false });
             res.json({ qrCode: data_url });
         });
-    } catch (err) { res.status(500).json({ success: false }); }
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
 });
 
 app.post('/api/2fa/verify', async (req, res) => {
@@ -150,7 +158,9 @@ app.post('/api/2fa/verify', async (req, res) => {
             return res.json({ success: true });
         }
         res.json({ success: false });
-    } catch (err) { res.status(500).json({ success: false }); }
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
 });
 
 app.post('/api/evidencias/upload', upload.single('ficheiro'), async (req, res) => {
@@ -165,7 +175,9 @@ app.post('/api/evidencias/upload', upload.single('ficheiro'), async (req, res) =
         await db.query("INSERT INTO logs_auditoria (id_controlo, acao, usuario) VALUES (?, ?, ?)", [id_controlo, 'Upload manual de evidência', 'Auditor']);
 
         res.json({ success: true });
-    } catch (err) { res.status(500).json({ success: false }); }
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
 });
 
 app.post('/api/gerar-evidencia-ia', async (req, res) => {
@@ -186,6 +198,7 @@ app.post('/api/gerar-evidencia-ia', async (req, res) => {
         fs.writeFileSync(path.join(uploadDir, nomeArquivo), htmlTemplate);
 
         await db.query("INSERT INTO evidencias (nome_arquivo, caminho, id_controlo) VALUES (?, ?, ?)", [nomeArquivo, `uploads/${nomeArquivo}`, id_controlo]);
+        // ALTERAÇÃO PARA GARANTIR CONFORME = 1
         await db.query("UPDATE auditorias SET estado='CONFORME', conforme=1 WHERE id_controlo=?", [id_controlo]);
         res.json({ success: true });
     } catch (error) { res.status(500).json({ success: false }); }
@@ -218,6 +231,7 @@ app.get('/api/controlos', async (req, res) => {
 app.post('/api/update-status', async (req, res) => {
     try {
         const { id, novo_estado, auditor } = req.body;
+        // ALTERAÇÃO: Atualiza a coluna conforme com base no novo estado
         const conformeVal = novo_estado === 'CONFORME' ? 1 : 0;
         await db.query("UPDATE auditorias SET estado=?, conforme=? WHERE id_controlo=?", [novo_estado, conformeVal, id]);
         await db.query("INSERT INTO logs_auditoria (id_controlo, acao, usuario) VALUES (?, ?, ?)", [id, `Alterou para ${novo_estado}`, auditor]);
@@ -265,11 +279,36 @@ app.post('/api/mitigar-risco', async (req, res) => {
     try {
         const { id_controlo, plano_acao, auditor } = req.body;
         const plano = `[Registado por ${auditor}]\nPlano: ${plano_acao}`;
-        // ALTERAÇÃO: O estado passa a ser 'PLANO APLICADO' e conforme continua a 0 até ter evidência
+        // ALTERAÇÃO: O estado passa a 'PLANO APLICADO' e conforme mantém-se 0 (até a evidência ser carregada)
         await db.query("UPDATE auditorias SET conforme = 0, estado = 'PLANO APLICADO', plano_acao = ? WHERE id_controlo = ?", [plano, id_controlo]);
         await db.query("INSERT INTO logs_auditoria (id_controlo, acao, usuario) VALUES (?, ?, ?)", [id_controlo, "Plano de Ação Aplicado", auditor]);
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: "Erro DB" }); }
+});
+
+// ==========================================
+// DIREITO AO ESQUECIMENTO (RGPD)
+// ==========================================
+app.post('/api/apagar-conta', async (req, res) => {
+    try {
+        const { userId } = req.body;
+        
+        if (!userId) {
+            return res.status(400).json({ success: false, message: 'ID em falta' });
+        }
+
+        // Apaga o utilizador da base de dados permanentemente
+        await db.query("DELETE FROM utilizadores WHERE id = ?", [userId]);
+        
+        // (Opcional) Pode-se registar nos logs que um titular exerceu o Direito ao Esquecimento
+        await db.query("INSERT INTO logs_auditoria (id_controlo, acao, usuario) VALUES (?, ?, ?)", 
+            ['RGPD', 'Direito ao Esquecimento exercido - Conta eliminada', 'Sistema']);
+
+        res.json({ success: true, message: 'Dados eliminados com sucesso' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Erro ao eliminar dados' });
+    }
 });
 
 app.use((req, res) => {
@@ -278,5 +317,5 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`SERVIDOR ONLINE NA PORTA ${PORT}`);
+    console.log(`🚀 SERVIDOR ONLINE NA PORTA ${PORT}`);
 });

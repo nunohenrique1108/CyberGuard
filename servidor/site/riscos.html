@@ -5,6 +5,7 @@
     <title>CyberGuard | Centro de Remediação de Riscos</title>
     
     <style>
+        /* AS TUAS CORES E SIDEBAR ORIGINAIS INTACTAS */
         :root { --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --success: #27ae60; --warning: #f39c12; --danger: #e74c3c; --light: #f8f9fa; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: var(--light); display: flex; min-height: 100vh; }
         
@@ -16,37 +17,92 @@
         .active { background: rgba(255,255,255,0.2); border-left-color: var(--accent); }
         
         .logout-item { margin-top: auto; background: #3d465a; color: #e74c3c; border-left: 4px solid #e74c3c; padding: 15px 25px; text-decoration: none; display: block; font-weight: bold; transition: 0.3s; }
+        .logout-item:hover { background: rgba(255, 255, 255, 0.05); }
+
+        .main-content { flex: 1; margin-left: 260px; padding: 40px; box-sizing: border-box; max-width: calc(100% - 260px); }
         
-        .main-content { flex: 1; margin-left: 260px; padding: 40px; }
+        /* Cabeçalho da Página */
+        .page-header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px;}
+        .page-header h2 { color: var(--primary); margin: 0 0 5px 0; font-size: 26px; }
+        .page-header p { color: #7f8c8d; margin: 0; font-size: 14px; }
 
-        .page-header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
-        .page-header h2 { color: var(--primary); margin: 0; font-size: 26px; }
+        /* Separadores (Tabs) - AGORA COM 3 ABAS */
+        .tabs-container { display: flex; gap: 20px; margin-bottom: 20px; }
+        .tab-btn { background: none; border: none; padding: 10px 5px; font-size: 16px; font-weight: bold; color: #95a5a6; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s; }
+        .tab-btn:hover { color: var(--secondary); }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--accent); }
 
-        .tabs-container { display: flex; gap: 20px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
-        .tab-btn { background: none; border: none; font-size: 16px; font-weight: bold; color: #95a5a6; cursor: pointer; transition: 0.3s; }
-        .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--accent); }
-
-        .tab-content { display: none; }
+        /* Paineis de Conteúdo */
+        .tab-content { display: none; animation: fadeIn 0.4s ease; }
         .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* Design em "Cartões de Incidente" (Tickets) */
         .ticket-list { display: flex; flex-direction: column; gap: 15px; }
-        .ticket-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #ccc; }
+        .ticket-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #ccc; border-right: 1px solid #eee; border-top: 1px solid #eee; border-bottom: 1px solid #eee; transition: 0.3s; }
+        .ticket-card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.08); transform: translateX(5px); }
+        
+        /* Cores da borda lateral do Ticket baseadas no risco */
         .ticket-card.critico { border-left-color: var(--danger); }
         .ticket-card.medio { border-left-color: var(--warning); }
         .ticket-card.aguarda { border-left-color: #f1c40f; background: #fffdf3; }
         .ticket-card.sucesso { border-left-color: var(--success); }
+
+        .ticket-info { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+        .ticket-header { display: flex; align-items: center; gap: 15px; }
+        .ticket-id { font-weight: bold; font-size: 16px; color: var(--primary); }
+        .empresa-tag { background: #ebf5fb; color: var(--accent); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .risco-badge { font-weight: bold; font-size: 11px; padding: 4px 10px; border-radius: 6px; border: 1px solid; }
         
-        .ticket-id { font-weight: bold; color: var(--primary); font-size: 15px; }
-        .empresa-tag { background: #ebf5fb; color: var(--accent); padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-        .risco-badge { font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 4px; border: 1px solid; }
+        .ticket-desc { color: #34495e; font-size: 14px; margin: 0; max-width: 700px; line-height: 1.5; }
         
-        .btn-acao { background: var(--danger); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-acao:hover { opacity: 0.9; }
+        /* Estilo para mostrar o plano na aba de Aguardar Evidência */
+        .plano-box { background: rgba(255,255,255,0.6); padding: 10px; border-radius: 6px; font-size: 13px; color: #555; margin-top: 8px; border: 1px dashed #d4ac0d; }
+
+        /* Estado Vazio (Mensagem de Sucesso) */
+        .empty-state { text-align: center; padding: 50px 20px; background: white; border-radius: 12px; border: 2px dashed #bdc3c7; }
+        .empty-state h3 { color: var(--success); margin-bottom: 10px; }
+        .empty-state p { color: #7f8c8d; font-size: 14px; }
+
+        /* Botões */
+        .btn-acao { background: var(--danger); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; font-size: 13px; }
+        .btn-acao:hover { background: #c0392b; transform: scale(1.02); }
+        .btn-acao.medio { background: var(--warning); }
+        .btn-acao.medio:hover { background: #d35400; }
+        .btn-acao.anexar { background: #f1c40f; color: #2c3e50; }
+        .btn-acao.anexar:hover { background: #d4ac0d; }
         
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; backdrop-filter: blur(2px); }
-        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        textarea { width: 100%; height: 100px; margin-top: 10px; padding: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-family: inherit; }
-        .btn-ia { background: #8e44ad; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; margin-top: 10px; font-weight: bold; }
+        .btn-resolvido { background: #f8f9fa; color: var(--success); border: 1px solid var(--success); padding: 8px 15px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: default; }
+
+        /* O TEU MODAL PREMIUM INTACTO */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(44, 62, 80, 0.7); align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+        .modal-content { background-color: white; border-radius: 12px; width: 60%; max-width: 750px; box-shadow: 0 15px 50px rgba(0,0,0,0.3); overflow: hidden; animation: slideUp 0.3s ease; }
+        
+        .modal-header { background: var(--primary); color: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { margin: 0; font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .close-btn { font-size: 28px; font-weight: bold; cursor: pointer; color: #bdc3c7; border: none; background: none; transition: 0.2s; }
+        .close-btn:hover { color: white; }
+        
+        .modal-body { padding: 30px; }
+        .alvo-box { background: #fdf2e9; border: 1px solid #fadbd8; color: #d35400; padding: 12px 15px; border-radius: 6px; font-size: 14px; margin-bottom: 25px; display: flex; gap: 10px; align-items: center; }
+        
+        .input-label { font-weight: bold; color: var(--secondary); display: block; margin-bottom: 8px; font-size: 14px; }
+        textarea { width: 100%; height: 120px; padding: 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; box-sizing: border-box; transition: 0.3s; }
+        textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2); }
+
+        /* Área da IA */
+        .ai-section { margin-top: 20px; background: #f4f6f7; border-radius: 8px; padding: 20px; border: 1px solid #e2e8f0; }
+        .btn-ia { background: linear-gradient(135deg, #8e44ad, #9b59b6); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; }
+        .btn-ia:hover { box-shadow: 0 4px 15px rgba(142, 68, 173, 0.4); transform: translateY(-2px); }
+        
+        .caixa-ia { background: white; border-left: 4px solid #8e44ad; padding: 15px; margin-top: 15px; border-radius: 0 8px 8px 0; font-size: 14px; color: #2c3e50; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        .modal-footer { padding: 20px 30px; background: #f8f9fa; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 15px; }
+        .btn-cancelar { background: white; color: var(--secondary); border: 1px solid #cbd5e1; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-cancelar:hover { background: #f1f5f9; }
+        .btn-sucesso { background: var(--success); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+        .btn-sucesso:hover { background: #219a52; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); }
+
     </style>
 </head>
 <body>
@@ -63,33 +119,75 @@
 
     <main class="main-content">
         <div class="page-header">
-            <h2>🔥 Centro de Remediação de Riscos</h2>
-            <button onclick="window.location.href='controlos.html'" style="background:white; border:1px solid #cbd5e1; padding:8px 15px; cursor:pointer; border-radius:6px; font-weight:bold; color:var(--secondary);">⬅ Alterar Auditoria</button>
+            <div>
+                <h2>🔥 Centro de Remediação de Riscos</h2>
+                <p>Monitorize, trate e reveja o histórico de vulnerabilidades detetadas nas auditorias ISO 27001.</p>
+            </div>
         </div>
 
         <div class="tabs-container">
-            <button class="tab-btn active" onclick="mudarTab('pendentes', this)">🚨 Requer Ação</button>
+            <button class="tab-btn active" onclick="mudarTab('acao', this)">🚨 Requer Ação (<span id="contagem-acao">0</span>)</button>
+            <button class="tab-btn" onclick="mudarTab('aguarda', this)">⏳ Aguarda Evidência (<span id="contagem-aguarda">0</span>)</button>
             <button class="tab-btn" onclick="mudarTab('mitigados', this)">✅ Riscos Mitigados</button>
         </div>
 
-        <div id="tab-pendentes" class="tab-content active">
-            <div class="ticket-list" id="lista-pendentes"></div>
+        <div id="tab-acao" class="tab-content active">
+            <div id="empty-acao" class="empty-state" style="display: none;">
+                <h3>🎉 Ambiente Seguro!</h3>
+                <p>Excelente trabalho. Não existem anomalias que exijam plano de ação no momento.</p>
+            </div>
+            <div class="ticket-list" id="lista-acao"></div>
+        </div>
+
+        <div id="tab-aguarda" class="tab-content">
+            <div id="empty-aguarda" class="empty-state" style="display: none;">
+                <h3 style="color: #f39c12;">Nenhum Risco Pendente</h3>
+                <p>Todos os planos de mitigação já receberam as respetivas evidências físicas.</p>
+            </div>
+            <div class="ticket-list" id="lista-aguarda"></div>
         </div>
 
         <div id="tab-mitigados" class="tab-content">
+            <div id="empty-mitigados" class="empty-state" style="display: none;">
+                <h3 style="color: var(--secondary);">Nenhum Histórico</h3>
+                <p>Ainda não foram aplicados planos de mitigação totalmente conformes nesta plataforma.</p>
+            </div>
             <div class="ticket-list" id="lista-mitigados"></div>
         </div>
     </main>
 
     <div id="modal-tratamento" class="modal">
         <div class="modal-content">
-            <span style="float:right; cursor:pointer; font-size:24px; font-weight:bold; color:#7f8c8d;" onclick="fecharModal()">&times;</span>
-            <h2>🛠️ Definir Plano de Ação: <span id="modal-id"></span></h2>
-            <p style="font-size:13px; color:#7f8c8d; margin:0;">O risco passará ao estado intermédio até que a evidência de conformidade seja submetida.</p>
-            <textarea id="texto-plano" placeholder="Escreva as contramedidas técnicas organizacionais necessárias..."></textarea>
-            <button class="btn-ia" onclick="sugerirMitigacaoIA()">✨ Sugestão Gemini IA</button>
-            <div id="caixa-ia" style="display:none; background:#f4f6f7; padding:12px; margin-top:10px; border-left:4px solid #8e44ad; font-size:13px; color:#2c3e50; border-radius:4px;"></div>
-            <button onclick="salvarPlanoAcao()" style="width:100%; background:var(--primary); color:white; border:none; padding:12px; margin-top:20px; cursor:pointer; font-weight:bold; border-radius:6px;">Salvar Plano e Aguardar Evidência</button>
+            <div class="modal-header">
+                <h2>🛠️ Plano de Ação e Remediação</h2>
+                <button class="close-btn" onclick="fecharModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="alvo-box">
+                    <strong>Alvo Crítico:</strong> <span id="modal-id"></span> - <span id="modal-nome"></span>
+                </div>
+
+                <label class="input-label">📝 Descrever o Procedimento de Correção (Plano de Ação):</label>
+                <textarea id="texto-plano" placeholder="Descreva de forma clara os passos técnicos ou administrativos que vão ser aplicados para mitigar este risco e atingir a conformidade..."></textarea>
+                
+                <div class="ai-section">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 13px; color: #7f8c8d; font-weight: bold;">Bloqueado? A Inteligência Artificial pode ajudar.</span>
+                        <button class="btn-ia" onclick="sugerirMitigacaoIA()">✨ Gerar Solução com Gemini IA</button>
+                    </div>
+                    
+                    <div id="caixa-sugestao-ia" class="caixa-ia">
+                        <strong>🤖 Gemini IA sugere:</strong><br><br>
+                        <span id="texto-ia-animado"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+                <button class="btn-sucesso" onclick="resolverRisco()">✅ Aprovar Plano de Ação</button>
+            </div>
         </div>
     </div>
 
@@ -98,93 +196,192 @@
         const user = JSON.parse(localStorage.getItem('usuario')) || { nome: "Nuno Carvalho" };
         let riscoAtual = null;
 
-        function mudarTab(tab, btn) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.getElementById('tab-' + tab).classList.add('active');
+        // Gestão de Abas
+        function mudarTab(tabName, btnElement) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
         }
 
+        // Carregar Todos os Controlos e Filtrar pelas 3 Abas
         async function carregarRiscos() {
-            const empresaAtiva = localStorage.getItem('empresaAtiva') || 'CyberGuard GRC';
-            document.querySelector('.page-header h2').innerText = `🔥 Remediação: ${empresaAtiva}`;
+            try {
+                const response = await fetch(API_URL + '/api/controlos');
+                if (!response.ok) throw new Error("Erro de servidor.");
 
-            const res = await fetch(API_URL + '/api/controlos');
-            const controlos = await res.json();
-            
-            const riscos = controlos.filter(c => c.empresa === empresaAtiva || empresaAtiva === 'CyberGuard GRC');
-            
-            const listaP = document.getElementById('lista-pendentes');
-            const listaM = document.getElementById('lista-mitigados');
-            listaP.innerHTML = ''; listaM.innerHTML = '';
+                const todosControlos = await response.json();
+                
+                const listaAcao = document.getElementById('lista-acao');
+                const listaAguarda = document.getElementById('lista-aguarda');
+                const listaMitigados = document.getElementById('lista-mitigados');
+                
+                listaAcao.innerHTML = '';
+                listaAguarda.innerHTML = '';
+                listaMitigados.innerHTML = '';
 
-            riscos.forEach(r => {
-                if (r.estado === 'CONFORME') {
-                    listaM.innerHTML += `
-                        <div class="ticket-card sucesso">
-                            <div>
-                                <span class="empresa-tag" style="background:#e8f8f5; color:var(--success);">${r.empresa || 'Empresa'}</span>
-                                <div class="ticket-id" style="margin-top:5px;">${r.id_controlo} - ${r.nome_controlo}</div>
+                let countAcao = 0;
+                let countAguarda = 0;
+                let countMitigados = 0;
+
+                todosControlos.forEach(c => {
+                    const nomeEmpresa = c.empresa || 'CyberGuard GRC';
+                    
+                    if (c.estado === 'CONFORME') {
+                        // ABA 3: TOTALMENTE MITIGADOS
+                        countMitigados++;
+                        listaMitigados.innerHTML += `
+                            <div class="ticket-card sucesso">
+                                <div class="ticket-info">
+                                    <div class="ticket-header">
+                                        <span class="empresa-tag">${nomeEmpresa}</span>
+                                        <span class="ticket-id">${c.id_controlo}</span>
+                                        <span class="risco-badge" style="color: var(--success); border-color: var(--success);">✅ RESOLVIDO</span>
+                                    </div>
+                                    <p class="ticket-desc" style="color: #7f8c8d; text-decoration: line-through;">${c.nome_controlo}</p>
+                                </div>
+                                <div class="btn-resolvido">✓ Mitigado por ${user.nome}</div>
                             </div>
-                            <div style="color:var(--success); font-weight:bold; font-size:13px;">✓ TOTALMENTE MITIGADO</div>
-                        </div>`;
-                } else if (r.estado === 'PLANO APLICADO') {
-                    // ESTADO NOVO: Aguarda submissão da evidência técnica
-                    listaP.innerHTML += `
-                        <div class="ticket-card aguarda">
-                            <div>
-                                <span class="risco-badge" style="color: #d4ac0d; border-color: #d4ac0d; background:white;">⏳ AGUARDA EVIDÊNCIA</span>
-                                <div class="ticket-id" style="margin-top:5px;">${r.id_controlo} - ${r.nome_controlo}</div>
-                                <div style="font-size:12px; color:#7f8c8d; margin-top:5px; font-style:italic;">${r.plano_acao || ''}</div>
+                        `;
+                    } 
+                    else if (c.estado === 'PLANO APLICADO') {
+                        // ABA 2: AGUARDA EVIDÊNCIA FÍSICA
+                        countAguarda++;
+                        listaAguarda.innerHTML += `
+                            <div class="ticket-card aguarda">
+                                <div class="ticket-info">
+                                    <div class="ticket-header">
+                                        <span class="empresa-tag">${nomeEmpresa}</span>
+                                        <span class="ticket-id">${c.id_controlo}</span>
+                                        <span class="risco-badge" style="color: #d4ac0d; border-color: #d4ac0d;">⏳ AGUARDA EVIDÊNCIA</span>
+                                    </div>
+                                    <p class="ticket-desc">${c.nome_controlo}</p>
+                                    <div class="plano-box">${c.plano_acao || 'Plano de ação definido. Aguarda comprovação.'}</div>
+                                </div>
+                                <div>
+                                    <input type="file" id="file-risco-${c.id_controlo}" style="display:none;" onchange="subirEvidenciaRisco('${c.id_controlo}')">
+                                    <button class="btn-acao anexar" onclick="document.getElementById('file-risco-${c.id_controlo}').click()">
+                                        📎 Anexar Evidência
+                                    </button>
+                                </div>
                             </div>
-                            <div>
-                                <input type="file" id="file-risco-${r.id_controlo}" style="display:none;" onchange="subirEvidenciaRisco('${r.id_controlo}')">
-                                <button class="btn-acao" style="background:#f1c40f; color:#2c3e50;" onclick="document.getElementById('file-risco-${r.id_controlo}').click()">📎 Anexar Evidência</button>
+                        `;
+                    } 
+                    else {
+                        // ABA 1: REQUER AÇÃO (PENDENTES / NÃO CONFORMES)
+                        countAcao++;
+                        let classeBorda = c.risco === 'CRÍTICO' ? 'critico' : 'medio';
+                        let corRisco = c.risco === 'CRÍTICO' ? 'var(--danger)' : 'var(--warning)';
+                        let iconeRisco = c.risco === 'CRÍTICO' ? '🚨' : '⚠️';
+                        let btnClasse = c.risco === 'CRÍTICO' ? 'btn-acao' : 'btn-acao medio';
+
+                        listaAcao.innerHTML += `
+                            <div class="ticket-card ${classeBorda}">
+                                <div class="ticket-info">
+                                    <div class="ticket-header">
+                                        <span class="empresa-tag">${nomeEmpresa}</span>
+                                        <span class="ticket-id">${c.id_controlo}</span>
+                                        <span class="risco-badge" style="color: ${corRisco}; border-color: ${corRisco};">${iconeRisco} ${c.risco || 'ALTO'}</span>
+                                    </div>
+                                    <p class="ticket-desc">${c.nome_controlo}</p>
+                                </div>
+                                <button class="${btnClasse}" onclick="abrirModal('${c.id_controlo}', '${c.nome_controlo.replace(/'/g, "\\'")}')">
+                                    🛠️ Tratar Risco
+                                </button>
                             </div>
-                        </div>`;
-                } else {
-                    listaP.innerHTML += `
-                        <div class="ticket-card ${r.risco === 'CRÍTICO' ? 'critico' : 'medio'}">
-                            <div>
-                                <span class="empresa-tag">${r.empresa || 'Empresa'}</span>
-                                <div class="ticket-id" style="margin-top:5px;">${r.id_controlo} - ${r.nome_controlo}</div>
-                            </div>
-                            <button class="btn-acao" onclick="abrirModal('${r.id_controlo}', '${r.nome_controlo}')">Tratar Risco</button>
-                        </div>`;
-                }
-            });
+                        `;
+                    }
+                });
+
+                // Atualiza contadores nas abas
+                document.getElementById('contagem-acao').innerText = countAcao;
+                document.getElementById('contagem-aguarda').innerText = countAguarda;
+                
+                // Atualiza os Empty States
+                document.getElementById('empty-acao').style.display = countAcao === 0 ? 'block' : 'none';
+                document.getElementById('empty-aguarda').style.display = countAguarda === 0 ? 'block' : 'none';
+                document.getElementById('empty-mitigados').style.display = countMitigados === 0 ? 'block' : 'none';
+
+            } catch (err) {
+                console.error("Erro:", err);
+            }
         }
 
+        // Lógica do Modal
         function abrirModal(id, nome) {
             riscoAtual = id;
             document.getElementById('modal-id').innerText = id;
+            document.getElementById('modal-nome').innerText = nome;
             document.getElementById('texto-plano').value = '';
-            document.getElementById('caixa-ia').style.display = 'none';
+            document.getElementById('caixa-sugestao-ia').style.display = 'none';
+            document.getElementById('texto-ia-animado').innerText = '';
+            
             document.getElementById('modal-tratamento').style.display = 'flex';
         }
 
-        function fecharModal() { document.getElementById('modal-tratamento').style.display = 'none'; }
+        function fecharModal() {
+            document.getElementById('modal-tratamento').style.display = 'none';
+            riscoAtual = null;
+        }
 
+        // IA Animada
         function sugerirMitigacaoIA() {
-            document.getElementById('caixa-ia').style.display = 'block';
-            const s = "Gemini sugere: Implementar arquitetura de Firewall segmentada, ativar MFA global em todas as consolas administrativas e aplicar criptografia de dados em repouso (AES-256).";
-            document.getElementById('caixa-ia').innerText = s;
-            document.getElementById('texto-plano').value = s;
-        }
-
-        async function salvarPlanoAcao() {
-            const plano = document.getElementById('texto-plano').value;
-            if(!plano.trim()) return alert("Escreva o plano de ação!");
+            const caixa = document.getElementById('caixa-sugestao-ia');
+            const textoLocal = document.getElementById('texto-ia-animado');
+            caixa.style.display = 'block';
+            textoLocal.innerHTML = "<i>A processar o contexto ISO 27001 e a gerar medidas corretivas... ⏳</i>";
             
-            await fetch(API_URL + '/api/mitigar-risco', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ id_controlo: riscoAtual, plano_acao: plano, auditor: user.nome })
-            });
-            fecharModal();
-            carregarRiscos();
+            setTimeout(() => {
+                const sugestoes = [
+                    "Implementar autenticação multifator (MFA) obrigatória para todos os acessos de nível administrador. Rever as permissões de acesso através do princípio de 'Least Privilege'.",
+                    "Atualizar a política de passwords e forçar a rotação criptográfica a cada 90 dias. Recomenda-se a ativação do módulo de auditoria de logs diários para identificar tentativas de intrusão.",
+                    "Isolar a rede afetada numa VLAN dedicada e aplicar regras restritas de Firewall (Deny-All default). Agendar um teste de penetração (Pentest) interno nos próximos 15 dias para validar a mitigação.",
+                    "Elaborar e aprovar formalmente uma política de backups imutáveis, garantindo testes de restauração trimestrais documentados."
+                ];
+                const solucaoAleatoria = sugestoes[Math.floor(Math.random() * sugestoes.length)];
+                
+                textoLocal.innerHTML = solucaoAleatoria;
+                document.getElementById('texto-plano').value = solucaoAleatoria; 
+            }, 1500);
         }
 
+        // 1. Gravação na Base de Dados (Passa a PLANO APLICADO / Aguarda Evidência)
+        async function resolverRisco() {
+            const plano = document.getElementById('texto-plano').value;
+            
+            if(plano.trim() === '') {
+                alert("⚠️ Por favor, escreva o Plano de Ação antes de mitigar o risco.");
+                return;
+            }
+
+            try {
+                // Certifica-te de que o server.js que enviei na mensagem anterior está ativo!
+                const response = await fetch(API_URL + '/api/mitigar-risco', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        id_controlo: riscoAtual, 
+                        plano_acao: plano,
+                        auditor: user.nome 
+                    })
+                });
+
+                const result = await response.json();
+                
+                if(result.success) {
+                    alert(`🎯 Plano guardado com sucesso!\nO risco transitou para a aba "Aguarda Evidência".`);
+                    fecharModal();
+                    carregarRiscos(); 
+                }
+
+            } catch (err) {
+                console.error("Erro ao mitigar risco:", err);
+                alert("Erro ao comunicar com o servidor da Base de Dados.");
+            }
+        }
+
+        // 2. Upload da Evidência (Passa a CONFORME / Mitigado)
         async function subirEvidenciaRisco(id) {
             const fileInput = document.getElementById(`file-risco-${id}`);
             if (!fileInput.files[0]) return;
@@ -194,6 +391,7 @@
             formData.append('id_controlo', id);
 
             try {
+                // Faz o upload do ficheiro
                 const resUpload = await fetch(API_URL + '/api/evidencias/upload', {
                     method: 'POST',
                     body: formData
@@ -201,17 +399,24 @@
                 const dataUpload = await resUpload.json();
 
                 if (dataUpload.success) {
+                    // Se o upload correr bem, muda o estado para CONFORME
                     await fetch(API_URL + '/api/update-status', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({ id: id, novo_estado: 'CONFORME', auditor: user.nome })
                     });
-                    alert("✅ Evidência validada e enviada! O controlo passou a CONFORME.");
+                    
+                    alert("✅ Evidência anexada com sucesso! O controlo está agora CONFORME e o risco foi totalmente mitigado.");
                     carregarRiscos();
-                } else { alert("Falha no upload."); }
-            } catch (err) { alert("Erro de comunicação."); }
+                } else { 
+                    alert("Falha no upload da evidência."); 
+                }
+            } catch (err) { 
+                alert("Erro de comunicação ao anexar evidência."); 
+            }
         }
 
+        // Inicia a aplicação
         window.onload = carregarRiscos;
     </script>
 </body>
